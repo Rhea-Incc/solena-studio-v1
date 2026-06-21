@@ -620,7 +620,7 @@ function SolenaSite() {
         </section>
 
         {/* ---------- JOURNAL ---------- */}
-        <section className="relative px-6 py-40 md:px-12">
+        <section data-section="journal" className="relative px-6 py-40 md:px-12">
           <div className="mx-auto max-w-7xl">
             <div className="mb-20 flex items-end justify-between">
               <p className="eyebrow">VI — The Journal</p>
