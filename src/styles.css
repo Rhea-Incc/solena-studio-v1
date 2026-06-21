@@ -319,3 +319,37 @@
   pointer-events: none;
 }
 
+
+/* --- Scroll tracker (right rail) --- */
+.tracker-tick {
+  width: 18px;
+  opacity: 0.35;
+  transition: width 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 400ms ease, background-color 400ms ease;
+}
+.tracker-row.is-active .tracker-tick {
+  width: 36px;
+  opacity: 1;
+  background: var(--bronze-glow);
+}
+.tracker-row.is-active .tracker-label {
+  opacity: 1;
+}
+.tracker-row:hover .tracker-label {
+  opacity: 0.9;
+}
+
+/* --- Ecosystem nodes --- */
+.eco-node-disc {
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 700ms ease;
+}
+.eco-node.is-active .eco-node-disc {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 0 1px rgba(212, 168, 116, 0.35) inset,
+    0 0 40px rgba(212, 168, 116, 0.18);
+}
+.eco-node.is-active .eco-node-disc > div:nth-child(2) {
+  border-color: rgba(212, 168, 116, 0.55);
+}
