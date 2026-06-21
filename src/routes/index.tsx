@@ -36,6 +36,170 @@ export const Route = createFileRoute("/")({
   component: SolenaSite,
 });
 
+/* -----------------------------------------------------------------------
+ * Environment Canvas
+ *
+ * Images are not inserted into sections — they ARE the page. This is a
+ * single fixed substrate that lives beneath all content. Each "stratum"
+ * is a single image at a different depth, scale and position. Sections
+ * register themselves as scroll-zones that fade specific strata in/out
+ * and shift them through parallax, producing a continuous terrain
+ * rather than discrete blocks of media.
+ * -------------------------------------------------------------------- */
+const STRATA = [
+  {
+    id: "hero",
+    img: heroHaloLandscape.url,
+    imgPortrait: heroHaloPortrait.url,
+    scale: 1.4,
+    blend: "screen" as const,
+    baseOpacity: 0.42,
+    depth: 0.15, // deep relic layer
+    origin: "50% 45%",
+  },
+  {
+    id: "manifesto",
+    img: vieLandscape.url,
+    imgPortrait: viePortrait.url,
+    scale: 1.7,
+    blend: "soft-light" as const,
+    baseOpacity: 0.22,
+    depth: 0.25,
+    origin: "12% 50%",
+  },
+  {
+    id: "fragments",
+    img: gravityLandscape.url,
+    imgPortrait: gravityPortrait.url,
+    scale: 1.3,
+    blend: "overlay" as const,
+    baseOpacity: 0.18,
+    depth: 0.35,
+    origin: "75% 30%",
+  },
+  {
+    id: "ecosystem",
+    img: gravityLandscape.url,
+    imgPortrait: gravityPortrait.url,
+    scale: 1.6,
+    blend: "screen" as const,
+    baseOpacity: 0.32,
+    depth: 0.2,
+    origin: "50% 50%",
+  },
+  {
+    id: "standard",
+    img: vieLandscape.url,
+    imgPortrait: viePortrait.url,
+    scale: 2.0,
+    blend: "soft-light" as const,
+    baseOpacity: 0.1,
+    depth: 0.18,
+    origin: "50% 50%",
+  },
+  {
+    id: "transformations",
+    img: gravityLandscape.url,
+    imgPortrait: gravityPortrait.url,
+    scale: 1.5,
+    blend: "overlay" as const,
+    baseOpacity: 0.28,
+    depth: 0.4,
+    origin: "30% 60%",
+  },
+  {
+    id: "future",
+    img: vieLandscape.url,
+    imgPortrait: viePortrait.url,
+    scale: 1.8,
+    blend: "screen" as const,
+    baseOpacity: 0.5,
+    depth: 0.22,
+    origin: "50% 65%",
+  },
+  {
+    id: "invitation",
+    img: heroHaloLandscape.url,
+    imgPortrait: heroHaloPortrait.url,
+    scale: 2.2,
+    blend: "soft-light" as const,
+    baseOpacity: 0.08,
+    depth: 0.12,
+    origin: "50% 50%",
+  },
+];
+
+function EnvironmentCanvas() {
+  return (
+    <div className="env-canvas pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      {/* Base — living darkness */}
+      <div className="env-base absolute inset-0" />
+
+      {/* Image strata */}
+      {STRATA.map((s) => (
+        <div
+          key={s.id}
+          data-stratum={s.id}
+          className="env-stratum absolute inset-0"
+          style={{ opacity: 0 }}
+        >
+          <picture>
+            <source media="(orientation: portrait)" srcSet={s.imgPortrait} />
+            <img
+              src={s.img}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-[140%] w-[140%] -translate-x-[14%] -translate-y-[14%] object-cover"
+              style={{
+                transform: `scale(${s.scale})`,
+                transformOrigin: s.origin,
+                mixBlendMode: s.blend,
+                filter: "blur(0px)",
+              }}
+              data-depth={s.depth}
+            />
+          </picture>
+        </div>
+      ))}
+
+      {/* Hero atmospheric video — bleeds into base, never framed */}
+      <video
+        className="env-video pointer-events-none absolute inset-0 h-full w-full object-cover hidden md:block"
+        autoPlay
+        muted
+        loop
+        playsInline
+        poster={heroHaloLandscape.url}
+        style={{ mixBlendMode: "screen", opacity: 0 }}
+        data-video="hero"
+      >
+        <source src={heroVideoLandscape.url} type="video/mp4" />
+      </video>
+      <video
+        className="env-video pointer-events-none absolute inset-0 h-full w-full object-cover md:hidden"
+        autoPlay
+        muted
+        loop
+        playsInline
+        poster={heroHaloPortrait.url}
+        style={{ mixBlendMode: "screen", opacity: 0 }}
+        data-video="hero"
+      >
+        <source src={heroVideoPortrait.url} type="video/mp4" />
+      </video>
+
+      {/* Darkness veils — layered selective revelation */}
+      <div className="env-veil-deep absolute inset-0" />
+      <div className="env-veil-mid absolute inset-0" />
+      <div className="env-veil-foreground absolute inset-0" />
+
+      {/* Atmospheric glass + grain */}
+      <div className="env-glass absolute inset-0" />
+      <div className="grain absolute inset-0" />
+    </div>
+  );
+}
+
 function SolenaSite() {
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -52,70 +216,123 @@ function SolenaSite() {
         });
       });
 
-      // Parallax depth layers for hero
-      gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
-        const speed = parseFloat(el.dataset.parallax || "0.2");
-        gsap.to(el, {
-          yPercent: -speed * 60,
-          ease: "none",
+      // Thesis per-line reveals (slow, lingering)
+      gsap.utils.toArray<HTMLElement>(".thesis-line").forEach((el, i) => {
+        gsap.fromTo(
+          el,
+          { yPercent: 110, opacity: 0 },
+          {
+            yPercent: 0,
+            opacity: 1,
+            duration: 1.6,
+            delay: i * 0.14,
+            ease: "expo.out",
+            scrollTrigger: { trigger: el, start: "top 82%", once: true },
+          },
+        );
+      });
+
+      /* ----- Environment scroll binding -----
+       * Each stratum fades in across its zone(s) and parallaxes at its own
+       * depth speed. Images reveal slightly before text and linger after.
+       */
+      const strata = gsap.utils.toArray<HTMLElement>(".env-stratum");
+      strata.forEach((stratum) => {
+        const id = stratum.dataset.stratum!;
+        const zones = gsap.utils.toArray<HTMLElement>(
+          `[data-zone="${id}"]`,
+        );
+        if (!zones.length) return;
+
+        const target = STRATA.find((s) => s.id === id)!;
+
+        zones.forEach((zone) => {
+          // Opacity bloom: reveal early, linger late
+          gsap.fromTo(
+            stratum,
+            { opacity: 0 },
+            {
+              opacity: target.baseOpacity,
+              ease: "sine.inOut",
+              scrollTrigger: {
+                trigger: zone,
+                start: "top 95%",
+                end: "top 35%",
+                scrub: true,
+              },
+            },
+          );
+          gsap.to(stratum, {
+            opacity: 0,
+            ease: "sine.inOut",
+            scrollTrigger: {
+              trigger: zone,
+              start: "bottom 70%",
+              end: "bottom -20%",
+              scrub: true,
+            },
+          });
+
+          // Parallax drift — image moves slower than content
+          const img = stratum.querySelector("img");
+          if (img) {
+            gsap.fromTo(
+              img,
+              { yPercent: 8 },
+              {
+                yPercent: -8 * (1 - target.depth),
+                ease: "none",
+                scrollTrigger: {
+                  trigger: zone,
+                  start: "top bottom",
+                  end: "bottom top",
+                  scrub: true,
+                },
+              },
+            );
+          }
+        });
+      });
+
+      // Hero atmospheric video — only alive in hero zone
+      const heroVids = gsap.utils.toArray<HTMLElement>('[data-video="hero"]');
+      heroVids.forEach((v) => {
+        gsap.fromTo(
+          v,
+          { opacity: 0 },
+          {
+            opacity: 0.22,
+            scrollTrigger: {
+              trigger: '[data-zone="hero"]',
+              start: "top bottom",
+              end: "top 50%",
+              scrub: true,
+            },
+          },
+        );
+        gsap.to(v, {
+          opacity: 0,
           scrollTrigger: {
-            trigger: el.closest("[data-parallax-scope]") || el,
-            start: "top top",
+            trigger: '[data-zone="hero"]',
+            start: "bottom 80%",
             end: "bottom top",
             scrub: true,
           },
         });
       });
 
-      // Hero halo slow scale + fade as you leave
-      gsap.to(".hero-halo", {
-        scale: 1.18,
-        opacity: 0,
-        ease: "none",
+      // Darkness veils breathe with scroll
+      gsap.to(".env-veil-mid", {
+        opacity: 0.18,
         scrollTrigger: {
-          trigger: ".section-hero",
+          trigger: rootRef.current,
           start: "top top",
-          end: "bottom top",
-          scrub: 0.8,
+          end: "bottom bottom",
+          scrub: true,
         },
       });
 
-      // Wordmark dust dissolve
-      gsap.to(".hero-wordmark", {
-        letterSpacing: "0.6em",
-        opacity: 0,
-        ease: "power2.in",
-        scrollTrigger: {
-          trigger: ".section-hero",
-          start: "20% top",
-          end: "bottom top",
-          scrub: 0.6,
-        },
-      });
-
-      // Section line reveals — thesis (per-line)
-      gsap.utils
-        .toArray<HTMLElement>(".thesis-line")
-        .forEach((el, i) => {
-          gsap.fromTo(
-            el,
-            { yPercent: 110, opacity: 0 },
-            {
-              yPercent: 0,
-              opacity: 1,
-              duration: 1.4,
-              delay: i * 0.12,
-              ease: "expo.out",
-              scrollTrigger: {
-                trigger: el,
-                start: "top 80%",
-                once: true,
-              },
-            },
-          );
-        });
-
-      // Ecosystem center scale on pin
+      // Ecosystem orbit pulse on pin
       ScrollTrigger.create({
         trigger: ".section-ecosystem",
         start: "top top",
@@ -129,57 +346,40 @@ function SolenaSite() {
           });
         },
       });
+
+      // Wordmark dust dissolve
+      gsap.to(".hero-wordmark", {
+        letterSpacing: "0.6em",
+        opacity: 0,
+        ease: "power2.in",
+        scrollTrigger: {
+          trigger: '[data-zone="hero"]',
+          start: "20% top",
+          end: "bottom top",
+          scrub: 0.6,
+        },
+      });
     }, rootRef);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <div ref={rootRef} className="relative bg-obsidian text-ivory">
+    <div ref={rootRef} className="relative text-ivory">
+      <EnvironmentCanvas />
       <NavBar />
 
-      {/* ---------- HERO ---------- */}
-      <section
-        className="section-hero relative overflow-hidden"
-        data-parallax-scope
-        style={{ minHeight: "120vh" }}
-      >
-        <div className="absolute inset-0">
-          <picture>
-            <source media="(orientation: portrait)" srcSet={heroHaloPortrait.url} />
-            <img
-              src={heroHaloLandscape.url}
-              alt=""
-              className="hero-halo absolute inset-0 h-full w-full object-cover opacity-90 drift"
-              data-parallax="0.15"
-            />
-          </picture>
-          <video
-            className="hero-halo pointer-events-none absolute inset-0 h-full w-full object-cover mix-blend-screen opacity-60 hidden md:block"
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={heroHaloLandscape.url}
-          >
-            <source src={heroVideoLandscape.url} type="video/mp4" />
-          </video>
-          <video
-            className="hero-halo pointer-events-none absolute inset-0 h-full w-full object-cover mix-blend-screen opacity-60 md:hidden"
-            autoPlay
-            muted
-            loop
-            playsInline
-            poster={heroHaloPortrait.url}
-          >
-            <source src={heroVideoPortrait.url} type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-obsidian/40 via-obsidian/10 to-obsidian" />
-          <div className="grain absolute inset-0" />
-        </div>
-
-        <div className="relative z-10 flex min-h-[120vh] flex-col items-center justify-center px-6 text-center">
-          <p className="eyebrow mb-8 opacity-80">Civilizational Luxury · Est. Quiet</p>
+      {/* All content sits above the environment. No section frames an image. */}
+      <main className="relative z-10">
+        {/* ---------- HERO ---------- */}
+        <section
+          data-zone="hero"
+          className="relative flex flex-col items-center justify-center px-6 text-center"
+          style={{ minHeight: "120vh" }}
+        >
+          <p className="eyebrow mb-8 opacity-80">
+            Civilizational Luxury · Est. Quiet
+          </p>
 
           <h1 className="hero-wordmark font-display text-[16vw] leading-[0.9] tracking-[-0.04em] sm:text-[12vw] md:text-[10vw] lg:text-[9rem]">
             SOLENA
@@ -198,218 +398,211 @@ function SolenaSite() {
             className="bronze-line mt-16 inline-flex items-center gap-3 border-b border-stone/30 pb-2 text-sm uppercase tracking-[0.4em] text-ivory/90 transition-colors hover:text-bronze-glow"
           >
             <span>Enter the Ecosystem</span>
-            <span aria-hidden className="text-bronze">↓</span>
+            <span aria-hidden className="text-bronze">
+              ↓
+            </span>
           </a>
-        </div>
 
-        <div className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-[0.65rem] uppercase tracking-[0.5em] text-stone/50">
-          Scroll · Excavate
-        </div>
-      </section>
-
-      {/* ---------- THESIS ---------- */}
-      <section
-        id="thesis"
-        className="section-thesis relative overflow-hidden px-6 py-[18rem] md:px-12"
-      >
-        <div className="absolute left-1/2 top-1/2 -z-0 h-[80vh] w-[80vh] -translate-x-1/2 -translate-y-1/2 opacity-30 breathe">
-          <img
-            src={vieLandscape.url}
-            alt=""
-            className="h-full w-full object-contain mix-blend-screen"
-          />
-        </div>
-
-        <div className="relative mx-auto max-w-5xl">
-          <p className="eyebrow mb-20">I — The Solena Thesis</p>
-
-          <div className="space-y-10 font-display text-4xl font-light leading-[1.15] tracking-tight text-ivory sm:text-5xl md:text-6xl lg:text-7xl">
-            <p className="overflow-hidden">
-              <span className="thesis-line block">Most organizations compete for attention.</span>
-            </p>
-            <p className="overflow-hidden">
-              <span className="thesis-line block text-bronze-glow">Solena builds gravity.</span>
-            </p>
-            <p className="overflow-hidden">
-              <span className="thesis-line block text-stone">Gravity does not advertise.</span>
-            </p>
-            <p className="overflow-hidden">
-              <span className="thesis-line font-signature block italic">It attracts.</span>
-            </p>
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[0.65rem] uppercase tracking-[0.5em] text-stone/50">
+            Scroll · Excavate
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------- WHAT WE BUILD ---------- */}
-      <section className="relative px-6 py-40 md:px-12">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-24 flex items-end justify-between">
-            <p className="eyebrow">II — What We Build</p>
-            <p className="hidden max-w-sm text-sm leading-relaxed text-stone/80 md:block">
-              Four disciplines, one orbit. Each a vector for engineered gravity.
-            </p>
-          </div>
+        {/* ---------- THESIS / MANIFESTO ---------- */}
+        <section
+          id="thesis"
+          data-zone="manifesto"
+          className="relative px-6 py-[18rem] md:px-12"
+        >
+          <div className="relative mx-auto max-w-5xl">
+            <p className="eyebrow mb-20">I — The Solena Thesis</p>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                title: "Culture",
-                body: "Narrative architecture, ritual, and reference. We design the language a generation borrows from.",
-              },
-              {
-                title: "Space",
-                body: "Hospitality, residence and retail as destination. Architecture that becomes pilgrimage.",
-              },
-              {
-                title: "Media",
-                body: "Publications, films, signal. Owned channels engineered to outlast their subject.",
-              },
-              {
-                title: "Ventures",
-                body: "Capital deployed where culture compounds. Equity in the institutions of the next century.",
-              },
-            ].map((c, i) => (
-              <article
-                key={c.title}
-                className="glass group relative flex h-[26rem] flex-col justify-between overflow-hidden p-8 transition-transform duration-700 ease-out hover:-translate-y-1"
-              >
-                <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-bronze/20 blur-3xl transition-opacity duration-700 group-hover:opacity-100 opacity-40" />
-                <span className="font-signature text-xs italic text-stone/60">
-                  0{i + 1}
+            <div className="space-y-10 font-display text-4xl font-light leading-[1.15] tracking-tight text-ivory sm:text-5xl md:text-6xl lg:text-7xl">
+              <p className="overflow-hidden">
+                <span className="thesis-line block">
+                  Most organizations compete for attention.
                 </span>
-                <div>
-                  <h3 className="font-display text-4xl font-light text-ivory">
-                    {c.title}
-                  </h3>
-                  <p className="mt-6 max-w-xs text-sm leading-relaxed text-stone/80">
-                    {c.body}
-                  </p>
-                </div>
-              </article>
-            ))}
+              </p>
+              <p className="overflow-hidden">
+                <span className="thesis-line block text-bronze-glow">
+                  Solena builds gravity.
+                </span>
+              </p>
+              <p className="overflow-hidden">
+                <span className="thesis-line block text-stone">
+                  Gravity does not advertise.
+                </span>
+              </p>
+              <p className="overflow-hidden">
+                <span className="thesis-line font-signature block italic">
+                  It attracts.
+                </span>
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------- ECOSYSTEM ---------- */}
-      <section className="section-ecosystem relative h-[160vh] overflow-hidden">
-        <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
-          <picture className="absolute inset-0">
-            <source media="(orientation: portrait)" srcSet={gravityPortrait.url} />
-            <img
-              src={gravityLandscape.url}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-screen"
-            />
-          </picture>
-          <div className="absolute inset-0 bg-obsidian/60" />
-          <div className="grain absolute inset-0" />
-
-          <div className="ecosystem-stage relative aspect-square w-[min(90vw,42rem)]">
-            <div className="orbit-ring orbit-slow" />
-            <div className="orbit-ring orbit-mid scale-75" />
-            <div className="orbit-ring orbit-fast scale-50" />
-
-            {/* center */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
-              <div className="font-display text-3xl tracking-[0.3em] text-ivory">
-                SOLENA
-              </div>
-              <div className="eyebrow mt-2">Core</div>
+        {/* ---------- WHAT WE BUILD ---------- */}
+        <section
+          data-zone="fragments"
+          className="relative px-6 py-40 md:px-12"
+        >
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-24 flex items-end justify-between">
+              <p className="eyebrow">II — What We Build</p>
+              <p className="hidden max-w-sm text-sm leading-relaxed text-stone/80 md:block">
+                Four disciplines, one orbit. Each a vector for engineered
+                gravity.
+              </p>
             </div>
 
-            {/* orbiting nodes */}
-            {[
-              "Real Estate",
-              "Hospitality",
-              "Luxury",
-              "Media",
-              "Capital",
-              "Culture",
-            ].map((node, i, arr) => {
-              const angle = (i / arr.length) * Math.PI * 2;
-              const r = 46; // percentage
-              const x = 50 + Math.cos(angle) * r;
-              const y = 50 + Math.sin(angle) * r;
-              return (
-                <div
-                  key={node}
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: `${x}%`, top: `${y}%` }}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  title: "Culture",
+                  body: "Narrative architecture, ritual, and reference. We design the language a generation borrows from.",
+                },
+                {
+                  title: "Space",
+                  body: "Hospitality, residence and retail as destination. Architecture that becomes pilgrimage.",
+                },
+                {
+                  title: "Media",
+                  body: "Publications, films, signal. Owned channels engineered to outlast their subject.",
+                },
+                {
+                  title: "Ventures",
+                  body: "Capital deployed where culture compounds. Equity in the institutions of the next century.",
+                },
+              ].map((c, i) => (
+                <article
+                  key={c.title}
+                  className="glass group relative flex h-[26rem] flex-col justify-between overflow-hidden p-8 transition-transform duration-700 ease-out hover:-translate-y-1"
                 >
-                  <div className="glass flex h-24 w-24 items-center justify-center rounded-full px-2 text-center text-[0.7rem] uppercase tracking-[0.18em] text-ivory/90 backdrop-blur-xl">
-                    {node}
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-bronze/20 opacity-40 blur-3xl transition-opacity duration-700 group-hover:opacity-100" />
+                  <span className="font-signature text-xs italic text-stone/60">
+                    0{i + 1}
+                  </span>
+                  <div>
+                    <h3 className="font-display text-4xl font-light text-ivory">
+                      {c.title}
+                    </h3>
+                    <p className="mt-6 max-w-xs text-sm leading-relaxed text-stone/80">
+                      {c.body}
+                    </p>
                   </div>
-                </div>
-              );
-            })}
+                </article>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <p className="eyebrow absolute bottom-12 left-1/2 -translate-x-1/2">
-            III — The Ecosystem
-          </p>
-        </div>
-      </section>
+        {/* ---------- ECOSYSTEM ---------- */}
+        <section
+          data-zone="ecosystem"
+          className="section-ecosystem relative h-[160vh]"
+        >
+          <div className="sticky top-0 flex h-screen w-full items-center justify-center">
+            <div className="ecosystem-stage relative aspect-square w-[min(90vw,42rem)]">
+              <div className="orbit-ring orbit-slow" />
+              <div className="orbit-ring orbit-mid scale-75" />
+              <div className="orbit-ring orbit-fast scale-50" />
 
-      {/* ---------- STANDARD ---------- */}
-      <section className="relative bg-obsidian px-6 py-[18rem] md:px-12">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="eyebrow mb-24">IV — The Standard</p>
-          <p className="excavate font-display text-5xl font-extralight leading-tight tracking-tight text-ivory sm:text-6xl md:text-7xl">
-            <span>
-              We do not chase
-              <br />
-              the market.
-            </span>
-          </p>
-          <p className="excavate mt-16 font-signature text-3xl italic text-bronze-glow sm:text-4xl">
-            <span>We outlast it.</span>
-          </p>
-        </div>
-      </section>
-
-      {/* ---------- TRANSFORMATIONS ---------- */}
-      <section className="relative px-6 py-40 md:px-12">
-        <div className="mx-auto max-w-7xl">
-          <p className="eyebrow mb-20">V — Transformations</p>
-
-          <div className="space-y-32">
-            {[
-              {
-                from: "Brand",
-                to: "Monument",
-                body: "Identity engineered with the weight of architecture. A logo becomes a landmark.",
-                img: vieLandscape.url,
-              },
-              {
-                from: "Space",
-                to: "Destination",
-                body: "Hospitality designed not for visit, but for return. Place as gravitational object.",
-                img: gravityLandscape.url,
-              },
-              {
-                from: "Concept",
-                to: "Signal",
-                body: "Ideas refined until they cease to argue. Until the market simply turns toward them.",
-                img: heroHaloLandscape.url,
-              },
-            ].map((t, i) => (
-              <article
-                key={t.from}
-                className={`grid items-center gap-12 md:grid-cols-2 ${
-                  i % 2 ? "md:[&>div:first-child]:order-2" : ""
-                }`}
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img
-                    src={t.img}
-                    alt=""
-                    className="h-full w-full object-cover opacity-90 mix-blend-screen"
-                  />
-                  <div className="grain absolute inset-0" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-obsidian/70 to-transparent" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                <div className="font-display text-3xl tracking-[0.3em] text-ivory">
+                  SOLENA
                 </div>
-                <div>
+                <div className="eyebrow mt-2">Core</div>
+              </div>
+
+              {[
+                "Real Estate",
+                "Hospitality",
+                "Luxury",
+                "Media",
+                "Capital",
+                "Culture",
+              ].map((node, i, arr) => {
+                const angle = (i / arr.length) * Math.PI * 2;
+                const r = 46;
+                const x = 50 + Math.cos(angle) * r;
+                const y = 50 + Math.sin(angle) * r;
+                return (
+                  <div
+                    key={node}
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                  >
+                    <div className="glass flex h-24 w-24 items-center justify-center rounded-full px-2 text-center text-[0.7rem] uppercase tracking-[0.18em] text-ivory/90 backdrop-blur-xl">
+                      {node}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="eyebrow absolute bottom-12 left-1/2 -translate-x-1/2">
+              III — The Ecosystem
+            </p>
+          </div>
+        </section>
+
+        {/* ---------- STANDARD ---------- */}
+        <section
+          data-zone="standard"
+          className="relative px-6 py-[18rem] md:px-12"
+        >
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="eyebrow mb-24">IV — The Standard</p>
+            <p className="excavate font-display text-5xl font-extralight leading-tight tracking-tight text-ivory sm:text-6xl md:text-7xl">
+              <span>
+                We do not chase
+                <br />
+                the market.
+              </span>
+            </p>
+            <p className="excavate mt-16 font-signature text-3xl italic text-bronze-glow sm:text-4xl">
+              <span>We outlast it.</span>
+            </p>
+          </div>
+        </section>
+
+        {/* ---------- TRANSFORMATIONS ---------- *
+         * No framed thumbnails. The environment provides the imagery; the
+         * text floats above it as editorial overlays.
+         */}
+        <section
+          data-zone="transformations"
+          className="relative px-6 py-40 md:px-12"
+        >
+          <div className="mx-auto max-w-6xl">
+            <p className="eyebrow mb-20">V — Transformations</p>
+
+            <div className="space-y-48">
+              {[
+                {
+                  from: "Brand",
+                  to: "Monument",
+                  body: "Identity engineered with the weight of architecture. A logo becomes a landmark.",
+                  align: "md:ml-0 md:mr-auto",
+                },
+                {
+                  from: "Space",
+                  to: "Destination",
+                  body: "Hospitality designed not for visit, but for return. Place as gravitational object.",
+                  align: "md:ml-auto md:mr-0",
+                },
+                {
+                  from: "Concept",
+                  to: "Signal",
+                  body: "Ideas refined until they cease to argue. Until the market simply turns toward them.",
+                  align: "md:ml-0 md:mr-auto",
+                },
+              ].map((t) => (
+                <article
+                  key={t.from}
+                  className={`max-w-xl ${t.align}`}
+                >
                   <div className="font-display text-6xl font-extralight leading-none md:text-7xl">
                     <span className="text-stone/60">{t.from}</span>
                     <br />
@@ -420,114 +613,112 @@ function SolenaSite() {
                   <p className="mt-8 max-w-md text-sm leading-relaxed text-stone/80">
                     {t.body}
                   </p>
-                </div>
-              </article>
-            ))}
+                </article>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------- JOURNAL ---------- */}
-      <section className="relative px-6 py-40 md:px-12">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-20 flex items-end justify-between">
-            <p className="eyebrow">VI — The Journal</p>
-            <span className="text-xs uppercase tracking-[0.3em] text-stone/60">
-              Selected Dispatches
-            </span>
+        {/* ---------- JOURNAL ---------- */}
+        <section className="relative px-6 py-40 md:px-12">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-20 flex items-end justify-between">
+              <p className="eyebrow">VI — The Journal</p>
+              <span className="text-xs uppercase tracking-[0.3em] text-stone/60">
+                Selected Dispatches
+              </span>
+            </div>
+
+            <div className="grid gap-[1px] bg-ivory/5 md:grid-cols-3">
+              {[
+                {
+                  no: "Field Note 01",
+                  title: "On the Architecture of Patience",
+                  meta: "Essay · 12 min",
+                },
+                {
+                  no: "Field Note 02",
+                  title: "Why Markets Misprice Silence",
+                  meta: "Thesis · 8 min",
+                },
+                {
+                  no: "Field Note 03",
+                  title: "Engineering the Heirloom Brand",
+                  meta: "Case · 18 min",
+                },
+              ].map((j) => (
+                <a
+                  key={j.no}
+                  href="#"
+                  className="group relative block bg-obsidian/60 p-10 backdrop-blur-md transition-colors duration-500 hover:bg-ivory/[0.02]"
+                >
+                  <p className="font-signature text-xs italic text-bronze-glow">
+                    {j.no}
+                  </p>
+                  <h3 className="mt-8 font-display text-2xl font-light leading-snug text-ivory md:text-3xl">
+                    {j.title}
+                  </h3>
+                  <p className="mt-10 text-xs uppercase tracking-[0.3em] text-stone/60">
+                    {j.meta} · <span className="bronze-line">Read</span>
+                  </p>
+                </a>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="grid gap-[1px] bg-ivory/5 md:grid-cols-3">
-            {[
-              {
-                no: "Field Note 01",
-                title: "On the Architecture of Patience",
-                meta: "Essay · 12 min",
-              },
-              {
-                no: "Field Note 02",
-                title: "Why Markets Misprice Silence",
-                meta: "Thesis · 8 min",
-              },
-              {
-                no: "Field Note 03",
-                title: "Engineering the Heirloom Brand",
-                meta: "Case · 18 min",
-              },
-            ].map((j) => (
-              <a
-                key={j.no}
-                href="#"
-                className="group relative block bg-obsidian p-10 transition-colors duration-500 hover:bg-ivory/[0.02]"
-              >
-                <p className="font-signature text-xs italic text-bronze-glow">
-                  {j.no}
-                </p>
-                <h3 className="mt-8 font-display text-2xl font-light leading-snug text-ivory md:text-3xl">
-                  {j.title}
-                </h3>
-                <p className="mt-10 text-xs uppercase tracking-[0.3em] text-stone/60">
-                  {j.meta} ·{" "}
-                  <span className="bronze-line">Read</span>
-                </p>
-              </a>
-            ))}
+        {/* ---------- FUTURE ---------- */}
+        <section data-zone="future" className="relative h-[130vh]">
+          <div className="sticky top-0 flex h-screen w-full items-center justify-center">
+            <div className="relative z-10 px-6 text-center">
+              <p className="eyebrow mb-12">VII — The Future</p>
+              <h2 className="excavate font-display text-5xl font-extralight leading-[0.95] tracking-tight text-ivory sm:text-7xl md:text-[8rem]">
+                <span>
+                  An institution
+                  <br />
+                  before
+                  <br />
+                  a company.
+                </span>
+              </h2>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------- FUTURE ---------- */}
-      <section className="relative h-[130vh] overflow-hidden">
-        <div className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden">
-          <picture>
-            <source media="(orientation: portrait)" srcSet={viePortrait.url} />
-            <img
-              src={vieLandscape.url}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-80 mix-blend-screen"
-              data-parallax="0.3"
-            />
-          </picture>
-          <div className="absolute inset-0 bg-gradient-to-b from-obsidian/40 via-transparent to-obsidian" />
-          <div className="grain absolute inset-0" />
+        {/* ---------- INVITATION ---------- */}
+        <section
+          data-zone="invitation"
+          className="relative px-6 py-40 md:px-12"
+        >
+          <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
+            <p className="eyebrow mb-16">VIII — Invitation</p>
 
-          <div className="relative z-10 px-6 text-center">
-            <p className="eyebrow mb-12">VII — The Future</p>
-            <h2 className="excavate font-display text-5xl font-extralight leading-[0.95] tracking-tight text-ivory sm:text-7xl md:text-[8rem]">
-              <span>An institution<br />before<br />a company.</span>
-            </h2>
+            <p className="font-display text-3xl font-light leading-snug text-ivory sm:text-4xl md:text-5xl">
+              We work with the rare few <br />
+              <span className="font-signature italic text-bronze-glow">
+                building for the century.
+              </span>
+            </p>
+
+            <p className="mt-10 max-w-md text-sm leading-relaxed text-stone/70">
+              Solena partners with founders, families and institutions whose
+              ambitions extend beyond their lifetime.
+            </p>
+
+            <a
+              href="mailto:studio@solena.co"
+              className="bronze-line mt-20 inline-flex items-center gap-4 border-b border-stone/30 pb-2 text-sm uppercase tracking-[0.45em] text-ivory transition-colors duration-700 hover:text-bronze-glow"
+            >
+              <span>Begin a Conversation</span>
+              <span aria-hidden className="text-bronze">
+                →
+              </span>
+            </a>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ---------- INVITATION ---------- */}
-      <section className="relative px-6 py-40 md:px-12">
-        <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
-          <p className="eyebrow mb-16">VIII — Invitation</p>
-
-          <p className="font-display text-3xl font-light leading-snug text-ivory sm:text-4xl md:text-5xl">
-            We work with the rare few <br />
-            <span className="font-signature italic text-bronze-glow">
-              building for the century.
-            </span>
-          </p>
-
-          <p className="mt-10 max-w-md text-sm leading-relaxed text-stone/70">
-            Solena partners with founders, families and institutions whose
-            ambitions extend beyond their lifetime.
-          </p>
-
-          <a
-            href="mailto:studio@solena.co"
-            className="bronze-line mt-20 inline-flex items-center gap-4 border-b border-stone/30 pb-2 text-sm uppercase tracking-[0.45em] text-ivory transition-colors duration-700 hover:text-bronze-glow"
-          >
-            <span>Begin a Conversation</span>
-            <span aria-hidden className="text-bronze">→</span>
-          </a>
-        </div>
-      </section>
-
-      <Footer />
+        <Footer />
+      </main>
     </div>
   );
 }
@@ -543,9 +734,15 @@ function NavBar() {
           </span>
         </a>
         <nav className="hidden gap-10 text-xs uppercase tracking-[0.35em] text-stone/80 md:flex">
-          <a href="#thesis" className="bronze-line">Thesis</a>
-          <a href="#" className="bronze-line">Ecosystem</a>
-          <a href="#" className="bronze-line">Journal</a>
+          <a href="#thesis" className="bronze-line">
+            Thesis
+          </a>
+          <a href="#" className="bronze-line">
+            Ecosystem
+          </a>
+          <a href="#" className="bronze-line">
+            Journal
+          </a>
           <a href="mailto:studio@solena.co" className="bronze-line text-ivory">
             Contact
           </a>
@@ -571,10 +768,18 @@ function Footer() {
           </p>
         </div>
         <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-xs uppercase tracking-[0.3em] text-stone/60">
-          <a href="#" className="bronze-line">Studio</a>
-          <a href="#" className="bronze-line">Ventures</a>
-          <a href="#" className="bronze-line">Journal</a>
-          <a href="#" className="bronze-line">Contact</a>
+          <a href="#" className="bronze-line">
+            Studio
+          </a>
+          <a href="#" className="bronze-line">
+            Ventures
+          </a>
+          <a href="#" className="bronze-line">
+            Journal
+          </a>
+          <a href="#" className="bronze-line">
+            Contact
+          </a>
         </div>
         <p className="font-signature text-xs italic text-stone/50">
           © {new Date().getFullYear()} Solena. Engineered, not advertised.

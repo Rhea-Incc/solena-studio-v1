@@ -237,3 +237,85 @@
 .orbit-fast { animation: orbit 40s linear infinite; }
 
 /* Soft cursor disabled here — keep it OS-native; luxury sites use restraint */
+
+/* --- SOLENA Environment Canvas ---
+ * The page is not a stack of sections with images inside;
+ * it is one continuous environment with content floating above.
+ */
+
+.env-canvas {
+  background-color: #060606;
+}
+
+/* Living darkness base — slow gradient breathing */
+.env-base {
+  background:
+    radial-gradient(
+      ellipse at 50% 35%,
+      oklch(0.14 0.01 60 / 0.9) 0%,
+      oklch(0.07 0 0 / 1) 55%,
+      #050505 100%
+    );
+  animation: env-breathe 22s ease-in-out infinite;
+}
+
+@keyframes env-breathe {
+  0%, 100% {
+    background-position: 50% 35%;
+    filter: brightness(1) saturate(1);
+  }
+  50% {
+    background-position: 50% 45%;
+    filter: brightness(1.08) saturate(1.05);
+  }
+}
+
+/* Strata transition slowly when opacity is scrubbed by GSAP */
+.env-stratum {
+  transition: opacity 120ms linear;
+  will-change: opacity, transform;
+}
+.env-stratum img {
+  will-change: transform;
+  filter: contrast(1.05) saturate(0.92);
+}
+
+/* Atmospheric video bleeds with darkness, never framed */
+.env-video {
+  will-change: opacity;
+  filter: contrast(1.1) brightness(0.9);
+}
+
+/* Layered darkness — selective revelation */
+.env-veil-deep {
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.55) 75%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  pointer-events: none;
+}
+.env-veil-mid {
+  background: rgba(6, 6, 6, 0.32);
+  pointer-events: none;
+  opacity: 0.42;
+}
+.env-veil-foreground {
+  background: linear-gradient(
+    180deg,
+    rgba(6, 6, 6, 0.18) 0%,
+    transparent 12%,
+    transparent 88%,
+    rgba(6, 6, 6, 0.28) 100%
+  );
+  pointer-events: none;
+}
+
+/* Glass atmospheric veil — last layer before content */
+.env-glass {
+  background: rgba(8, 8, 8, 0.18);
+  backdrop-filter: blur(2px) saturate(108%);
+  pointer-events: none;
+}
+
