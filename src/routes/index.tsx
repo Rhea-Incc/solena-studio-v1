@@ -668,7 +668,7 @@ function SolenaSite() {
         </section>
 
         {/* ---------- FUTURE ---------- */}
-        <section data-zone="future" className="relative h-[130vh]">
+        <section data-zone="future" data-section="future" className="relative h-[130vh]">
           <div className="sticky top-0 flex h-screen w-full items-center justify-center">
             <div className="relative z-10 px-6 text-center">
               <p className="eyebrow mb-12">VII — The Future</p>
