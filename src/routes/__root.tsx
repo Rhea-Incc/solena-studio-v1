@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Solena builds gravity for culture, capital, and legacy. A civilizational luxury growth studio engineering brands into institutions.",
       },
       { name: "author", content: "Solena" },
-      { property: "og:title", content: "SOLENA — We build gravity." },
+      { property: "og:title", content: "SOLENA — Civilizational Luxury Growth Studio" },
       {
         property: "og:description",
         content:
@@ -92,6 +92,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "SOLENA — Civilizational Luxury Growth Studio" },
+      { name: "description", content: "Solena Collective builds civilizations from brands, offering a unique digital experience." },
+      { property: "og:description", content: "Solena Collective builds civilizations from brands, offering a unique digital experience." },
+      { name: "twitter:description", content: "Solena Collective builds civilizations from brands, offering a unique digital experience." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/rs0UEG6UwFggzOqyiuUwy1tJu2X2/social-images/social-1782046354073-gravity-1.1.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/rs0UEG6UwFggzOqyiuUwy1tJu2X2/social-images/social-1782046354073-gravity-1.1.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
