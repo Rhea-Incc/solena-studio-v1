@@ -345,8 +345,9 @@ function SolenaSite() {
         onUpdate: (self) => {
           const p = self.progress;
           gsap.set(".ecosystem-stage", {
-            scale: 1 + p * 0.12,
-            rotation: p * 14,
+            scale: 1 + p * 0.06,
+            rotation: p * 4,
+            transformOrigin: "center center",
           });
           if (ecoNodes.length) {
             const idx = Math.min(
@@ -805,77 +806,213 @@ const ECO_NODES = [
   "Capital",
 ];
 
+// Dense concentric ring stack — "almost solid" telescope/micrometer texture.
+function OrbitRings({ half = false }: { half?: boolean }) {
+  // Many rings at decreasing radii build the dense, banded look.
+  const rings = Array.from({ length: 26 }, (_, i) => i);
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      viewBox="0 0 100 100"
+      preserveAspectRatio={half ? "xMaxYMid meet" : "xMidYMid meet"}
+      aria-hidden
+    >
+      <defs>
+        <radialGradient id="orbWash" cx={half ? "100%" : "50%"} cy="50%" r="65%">
+          <stop offset="0%" stopColor="rgba(212,168,116,0.10)" />
+          <stop offset="55%" stopColor="rgba(255,255,255,0.025)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        <radialGradient id="orbCore" cx={half ? "100%" : "50%"} cy="50%" r="35%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+      </defs>
+      {/* atmospheric wash so the rings sit on a soft disc */}
+      <circle
+        cx={half ? 100 : 50}
+        cy={50}
+        r={half ? 50 : 49}
+        fill="url(#orbWash)"
+      />
+      <circle
+        cx={half ? 100 : 50}
+        cy={50}
+        r={half ? 28 : 26}
+        fill="url(#orbCore)"
+      />
+      {rings.map((i) => {
+        const r = half ? 50 - i * 1.85 : 49 - i * 1.75;
+        if (r <= 4) return null;
+        // alternate hairline weight for the "machined" stripe look
+        const heavy = i % 4 === 0;
+        const op = 0.05 + (1 - i / rings.length) * 0.18;
+        return (
+          <circle
+            key={i}
+            cx={half ? 100 : 50}
+            cy={50}
+            r={r}
+            fill="none"
+            stroke="rgba(232,224,210,1)"
+            strokeOpacity={heavy ? op + 0.06 : op}
+            strokeWidth={heavy ? 0.18 : 0.08}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 function Ecosystem() {
+  // Desktop coords: full circle, evenly spaced.
+  const desktopCoords = ECO_NODES.map((_, i, arr) => {
+    const a = (i / arr.length) * Math.PI * 2 - Math.PI / 2;
+    return { x: 50 + Math.cos(a) * 42, y: 50 + Math.sin(a) * 42 };
+  });
+  // Mobile/Tablet coords: left-opening semicircle, center at right edge.
+  // θ from -80° (top) to +80° (bottom), fanned across the left arc.
+  const mobileCoords = ECO_NODES.map((_, i, arr) => {
+    const t = (i / (arr.length - 1)) * 2 - 1; // -1..1
+    const a = (t * 80 * Math.PI) / 180;
+    // center at (100, 50), radius x = 92, radius y = 46
+    return {
+      x: 100 - Math.cos(a) * 92,
+      y: 50 + Math.sin(a) * 46,
+    };
+  });
+
   return (
     <section
       data-zone="ecosystem"
       data-section="ecosystem"
       className="section-ecosystem relative h-[220vh]"
     >
-      <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden px-4 sm:px-6 md:px-12">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-10 md:grid-cols-[1fr_1.1fr] md:gap-12">
-          {/* Left — editorial copy */}
-          <div className="relative z-10 max-w-md md:pr-6">
-            <p className="eyebrow mb-6 md:mb-10">III — The Ecosystem</p>
-            <p className="font-display text-2xl font-light leading-[1.25] text-ivory sm:text-3xl md:text-4xl">
-              Solena sits at the center of converging sectors, where brand,
-              built environment, culture, capital, and narrative architecture
-              begin to move as a single field.
+      <div className="sticky top-0 flex h-screen w-full items-center overflow-hidden">
+        {/* MOBILE / TABLET — half-orbit anchored to the right */}
+        <div className="relative flex h-full w-full flex-col justify-end px-4 pb-16 sm:px-6 md:hidden">
+          {/* Half-orbit stage: 60vw wide, 80vh tall; orbit center sits at the
+              right edge of the stage, with SOLENA fully visible inside the viewport. */}
+          <div
+            className="ecosystem-stage pointer-events-none absolute top-1/2 -translate-y-1/2"
+            style={{ width: "60vw", height: "80vh", right: "max(14vw,3.5rem)" }}
+          >
+            <OrbitRings half />
+            {/* Core (SOLENA) — centered on the orbit's center (stage right edge) */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 translate-x-1/2 flex items-center justify-center rounded-full"
+              style={{
+                right: 0,
+                width: "min(28vw,13rem)",
+                height: "min(28vw,13rem)",
+              }}
+            >
+              <div className="absolute inset-0 rounded-full bg-obsidian/80 backdrop-blur-2xl" />
+              <div
+                className="absolute inset-0 rounded-full border border-ivory/10"
+                style={{
+                  boxShadow:
+                    "0 0 80px rgba(184,134,73,0.22), inset 0 0 40px rgba(0,0,0,0.6)",
+                }}
+              />
+              <span className="relative font-signature text-lg tracking-[0.22em] text-ivory">
+                SOLENA
+              </span>
+            </div>
+            {/* Nodes on the left semicircle */}
+            {ECO_NODES.map((node, i) => {
+              const { x, y } = mobileCoords[i];
+              return (
+                <div
+                  key={node}
+                  data-eco-node={node}
+                  className="eco-node absolute -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                >
+                  <div className="eco-node-disc relative flex h-[clamp(2.75rem,11vw,4.25rem)] w-[clamp(2.75rem,11vw,4.25rem)] items-center justify-center rounded-full text-center text-[clamp(0.5rem,2.4vw,0.7rem)] font-light leading-tight tracking-[0.04em] text-ivory/85">
+                    <div className="absolute inset-0 rounded-full bg-ivory/[0.04] backdrop-blur-xl" />
+                    <div className="absolute inset-0 rounded-full border border-ivory/12" />
+                    <span className="relative px-1">{node}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {/* Editorial copy — bottom-left, layered above the orbit */}
+          <div className="relative z-10 max-w-[62vw]">
+            <p className="eyebrow mb-5">III — The Ecosystem</p>
+            <p className="font-display text-xl font-light leading-[1.25] text-ivory sm:text-2xl">
+              Solena sits at the center of converging sectors — brand, built
+              environment, culture, capital, and narrative architecture moving
+              as a single field.
             </p>
-            <p className="mt-8 text-xs uppercase tracking-[0.35em] text-stone/70">
+            <p className="mt-6 text-[0.6rem] uppercase tracking-[0.35em] text-stone/70">
               Active sector ·{" "}
               <span
                 data-eco-active
-                className="font-signature text-sm italic tracking-normal text-bronze-glow"
+                className="font-signature text-xs italic tracking-normal text-bronze-glow"
               >
                 Real Estate
               </span>
             </p>
           </div>
+        </div>
 
-          {/* Right — orbital diagram */}
-          <div className="relative mx-auto aspect-square w-full max-w-[min(92vw,38rem)]">
-            <div className="ecosystem-stage absolute inset-0">
-              <div className="orbit-ring orbit-slow" />
-              <div className="orbit-ring orbit-mid absolute inset-[10%]" />
-              <div className="orbit-ring orbit-fast absolute inset-[22%]" />
-
-              {/* Core */}
-              <div className="absolute left-1/2 top-1/2 flex h-[34%] w-[34%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
-                <div className="absolute inset-0 rounded-full bg-obsidian/70 backdrop-blur-2xl" />
-                <div
-                  className="absolute inset-0 rounded-full border border-ivory/10"
-                  style={{
-                    boxShadow:
-                      "0 0 60px rgba(184,134,73,0.18), inset 0 0 40px rgba(0,0,0,0.6)",
-                  }}
-                />
-                <span className="relative font-signature text-xl tracking-[0.22em] text-ivory sm:text-2xl md:text-3xl">
-                  SOLENA
+        {/* DESKTOP — full orbit */}
+        <div className="mx-auto hidden w-full max-w-7xl px-12 md:block">
+          <div className="grid grid-cols-[1fr_1.1fr] items-center gap-12">
+            <div className="relative z-10 max-w-md pr-6">
+              <p className="eyebrow mb-10">III — The Ecosystem</p>
+              <p className="font-display text-4xl font-light leading-[1.2] text-ivory">
+                Solena sits at the center of converging sectors, where brand,
+                built environment, culture, capital, and narrative architecture
+                begin to move as a single field.
+              </p>
+              <p className="mt-8 text-xs uppercase tracking-[0.35em] text-stone/70">
+                Active sector ·{" "}
+                <span
+                  data-eco-active
+                  className="font-signature text-sm italic tracking-normal text-bronze-glow"
+                >
+                  Real Estate
                 </span>
-              </div>
+              </p>
+            </div>
 
-              {/* Nodes */}
-              {ECO_NODES.map((node, i, arr) => {
-                const angle = (i / arr.length) * Math.PI * 2 - Math.PI / 2;
-                const r = 44;
-                const x = 50 + Math.cos(angle) * r;
-                const y = 50 + Math.sin(angle) * r;
-                return (
+            <div className="relative mx-auto aspect-square w-full max-w-[min(80vh,38rem)]">
+              <div className="ecosystem-stage absolute inset-0">
+                <OrbitRings />
+                <div className="absolute left-1/2 top-1/2 flex h-[32%] w-[32%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
+                  <div className="absolute inset-0 rounded-full bg-obsidian/70 backdrop-blur-2xl" />
                   <div
-                    key={node}
-                    data-eco-node={node}
-                    className="eco-node absolute -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                  >
-                    <div className="eco-node-disc relative flex h-[clamp(3.5rem,11vw,6rem)] w-[clamp(3.5rem,11vw,6rem)] items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.3vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/85">
-                      <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
-                      <div className="absolute inset-0 rounded-full border border-ivory/10" />
-                      <span className="relative px-1">{node}</span>
+                    className="absolute inset-0 rounded-full border border-ivory/10"
+                    style={{
+                      boxShadow:
+                        "0 0 60px rgba(184,134,73,0.18), inset 0 0 40px rgba(0,0,0,0.6)",
+                    }}
+                  />
+                  <span className="relative font-signature text-2xl tracking-[0.22em] text-ivory lg:text-3xl">
+                    SOLENA
+                  </span>
+                </div>
+                {ECO_NODES.map((node, i) => {
+                  const { x, y } = desktopCoords[i];
+                  return (
+                    <div
+                      key={node}
+                      data-eco-node={node}
+                      className="eco-node absolute -translate-x-1/2 -translate-y-1/2"
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                    >
+                      <div className="eco-node-disc relative flex h-[clamp(4rem,9vw,6rem)] w-[clamp(4rem,9vw,6rem)] items-center justify-center rounded-full text-center text-[clamp(0.6rem,1vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/85">
+                        <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
+                        <div className="absolute inset-0 rounded-full border border-ivory/10" />
+                        <span className="relative px-1">{node}</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
