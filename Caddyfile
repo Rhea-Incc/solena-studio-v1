@@ -1,0 +1,63 @@
+# global options
+{
+	admin off
+	persist_config off
+	auto_https off
+
+	log {
+		format json
+	}
+
+	servers {
+		trusted_proxies static private_ranges 100.0.0.0/8 # trust railway's proxy
+	}
+}
+
+# site block, listens on the $PORT environment variable, automatically assigned by railway
+:{$PORT:80} {
+	log {
+		format json
+	}
+
+	respond /health 200
+
+	# Security headers
+	header {
+		# Prevent some browsers from MIME-sniffing a response away from the declared Content-Type
+		X-Content-Type-Options "nosniff"
+		# Remove Server header
+		-Server
+	}
+
+	# Try to serve from /app/dist/client first, then fall back to /app/dist
+	@client_exists {
+		file /app/dist/client{path}
+	}
+
+	handle @client_exists {
+		root * /app/dist/client
+		file_server {
+			hide .git
+			hide .env*
+		}
+	}
+
+	# Fallback to /app/dist for server output or other files
+	root * /app/dist
+
+	# Handle static files
+	file_server {
+		hide .git
+		hide .env*
+	}
+
+	# Compression with more formats
+	encode {
+		gzip
+		zstd
+	}
+
+	# match against direct against HTML file matches, folder-level index.html, and optionally fallback to root index.html
+	try_files {path} {path}.html {path}/index.html /index.html
+}
+
