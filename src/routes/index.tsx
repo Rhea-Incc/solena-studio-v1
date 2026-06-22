@@ -874,11 +874,11 @@ function Ecosystem() {
   // θ from -80° (top) to +80° (bottom), fanned across the left arc.
   const mobileCoords = ECO_NODES.map((_, i, arr) => {
     const t = (i / (arr.length - 1)) * 2 - 1; // -1..1
-    const a = (t * 80 * Math.PI) / 180;
-    // center at (100, 50), radius x = 92, radius y = 46
+    const a = (t * 68 * Math.PI) / 180; // tighter ±68° spread
+    // center at (100, 50), radius x = 90, radius y = 44
     return {
-      x: 100 - Math.cos(a) * 92,
-      y: 50 + Math.sin(a) * 46,
+      x: 100 - Math.cos(a) * 90,
+      y: 50 + Math.sin(a) * 44,
     };
   });
 
