@@ -967,7 +967,7 @@ function Ecosystem() {
         </div>
 
         {/* DESKTOP — full orbit */}
-        <div className="mx-auto hidden w-full max-w-7xl px-12 md:block">
+        <div className="mx-auto hidden w-full max-w-7xl px-12 lg:block">
           <div className="grid grid-cols-[1fr_1.1fr] items-center gap-12">
             <div className="relative z-10 max-w-md pr-6">
               <p className="eyebrow mb-10">III — The Ecosystem</p>
