@@ -29,21 +29,8 @@
 		-Server
 	}
 
-	# Try to serve from /app/dist/client first, then fall back to /app/dist
-	@client_exists {
-		file /app/dist/client{path}
-	}
-
-	handle @client_exists {
-		root * /app/dist/client
-		file_server {
-			hide .git
-			hide .env*
-		}
-	}
-
-	# Fallback to /app/dist for server output or other files
-	root * /app/dist
+	# TanStack Start server output
+	root * /app/dist/server
 
 	# Handle static files
 	file_server {
