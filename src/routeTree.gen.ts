@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThesisRouteImport } from './routes/thesis'
+import { Route as EcosystemRouteImport } from './routes/ecosystem'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ThesisRoute = ThesisRouteImport.update({
   id: '/thesis',
   path: '/thesis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EcosystemRoute = EcosystemRouteImport.update({
+  id: '/ecosystem',
+  path: '/ecosystem',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -25,27 +31,31 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ecosystem': typeof EcosystemRoute
   '/thesis': typeof ThesisRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ecosystem': typeof EcosystemRoute
   '/thesis': typeof ThesisRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ecosystem': typeof EcosystemRoute
   '/thesis': typeof ThesisRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/thesis'
+  fullPaths: '/' | '/ecosystem' | '/thesis'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/thesis'
-  id: '__root__' | '/' | '/thesis'
+  to: '/' | '/ecosystem' | '/thesis'
+  id: '__root__' | '/' | '/ecosystem' | '/thesis'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EcosystemRoute: typeof EcosystemRoute
   ThesisRoute: typeof ThesisRoute
 }
 
@@ -56,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: '/thesis'
       fullPath: '/thesis'
       preLoaderRoute: typeof ThesisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ecosystem': {
+      id: '/ecosystem'
+      path: '/ecosystem'
+      fullPath: '/ecosystem'
+      preLoaderRoute: typeof EcosystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -70,6 +87,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EcosystemRoute: EcosystemRoute,
   ThesisRoute: ThesisRoute,
 }
 export const routeTree = rootRouteImport
