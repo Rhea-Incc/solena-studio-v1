@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 
-export const ECO_NODES = [
-  "Real Estate",
-  "Technology",
-  "Hospitality",
-  "Luxury",
-  "Media",
-  "Ventures",
-  "Culture",
-  "Capital",
+export type Sector = {
+  name: string;
+  slug: string;
+  tagline: string;
+};
+
+export const SECTORS: Sector[] = [
+  { name: "Real Estate", slug: "real-estate", tagline: "Buildings as gravity wells." },
+  { name: "Technology", slug: "technology", tagline: "Tools built as artifacts." },
+  { name: "Hospitality", slug: "hospitality", tagline: "Service designed as ritual." },
+  { name: "Luxury", slug: "luxury", tagline: "Goods that outlive their owner's interest." },
+  { name: "Media", slug: "media", tagline: "Channels that operate as institutions." },
+  { name: "Ventures", slug: "ventures", tagline: "Capital at the intersection of culture and compound." },
+  { name: "Culture", slug: "culture", tagline: "The slow construction of taste." },
+  { name: "Capital", slug: "capital", tagline: "Patient money. Built for the century." },
 ];
+
+export const ECO_NODES = SECTORS.map((s) => s.name);
 
 /**
  * Dense concentric ring stack — "almost solid" telescope/micrometer texture.
- * When half=true, the orbit is anchored to a chosen edge ("right" | "bottom").
  */
 export function OrbitRings({
   half = false,
@@ -68,11 +76,11 @@ export function OrbitRings({
 }
 
 /**
- * Interactive micrometer gear — drag horizontally (or scroll-wheel) to
- * rotate the orbit and cycle the active sector. Emits rotation in degrees
- * via onChange. Renders the calibrated tick band typical of a screw gauge.
+ * Radial micrometer arc — sits to the left of the orbit, semi-circle
+ * opening toward Solena. Drag the indicator along the arc to scroll
+ * through sectors; ticks render as a dense screw-gauge band.
  */
-export function GearDial({
+function RadialGearDial({
   steps,
   index,
   onChange,
@@ -80,20 +88,51 @@ export function GearDial({
 }: {
   steps: number;
   index: number;
-  onChange: (nextIndex: number) => void;
+  onChange: (next: number) => void;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const dragging = useRef<{
-    startX: number;
-    startIndex: number;
-    width: number;
-  } | null>(null);
+  const dragging = useRef(false);
+
+  // Arc spans 220° on the LEFT side, opening toward the right (the orbit).
+  // We map index 0..steps-1 onto angles topAngle..bottomAngle measured
+  // clockwise from 12 o'clock. Left side = 180°..360° in standard math.
+  // We use angle in *degrees from north*, going counter-clockwise (CCW
+  // toward the left). So index 0 -> -110°, index last -> +110°.
+  const arcDeg = 220;
+  const half = arcDeg / 2;
+  const angleForIndex = (i: number) =>
+    -half + (i / (steps - 1)) * arcDeg;
+
+  const indexForPointer = (clientX: number, clientY: number) => {
+    const el = ref.current;
+    if (!el) return index;
+    const rect = el.getBoundingClientRect();
+    // Center of the arc is anchored at the RIGHT edge of the dial,
+    // vertically centered.
+    const cx = rect.right;
+    const cy = rect.top + rect.height / 2;
+    const dx = clientX - cx;
+    const dy = clientY - cy;
+    // angle from north (12 o'clock), positive = right (CW), negative = left
+    // We want negative on the left side. atan2(dx, -dy) gives that.
+    let a = (Math.atan2(dx, -dy) * 180) / Math.PI; // -180..180
+    // We expect a to be on the left half: roughly -180..-arcDeg/2 ∪ arcDeg/2..180
+    // Normalize to the CCW-left convention used by angleForIndex: -180..+180
+    // Mirror: on the left, dx<0, so a < 0. Map a from [-180,-half] U [half,180]
+    // into a continuous [-half..+half] by flipping sign appropriately.
+    if (a > 0) a = a - 180;
+    else a = a + 180;
+    // Now a is roughly in [-180, 180] again but mirrored around the left
+    // axis. Clamp:
+    a = Math.max(-half, Math.min(half, a));
+    const t = (a + half) / arcDeg;
+    return Math.round(t * (steps - 1));
+  };
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaY) < 4) return;
       e.preventDefault();
@@ -104,126 +143,189 @@ export function GearDial({
     return () => el.removeEventListener("wheel", onWheel);
   }, [index, steps, onChange]);
 
-  const start = (clientX: number) => {
-    const el = ref.current;
-    if (!el) return;
-    dragging.current = {
-      startX: clientX,
-      startIndex: index,
-      width: el.getBoundingClientRect().width,
+  // Render 80 ticks across the arc as a dense band
+  const tickCount = 81;
+  const ticks = Array.from({ length: tickCount }, (_, i) => {
+    const t = i / (tickCount - 1);
+    const ang = -half + t * arcDeg;
+    const major = i % 5 === 0;
+    const sectorTick = Math.round(t * (steps - 1)) !== Math.round(((i - 1) / (tickCount - 1)) * (steps - 1));
+    return { ang, major, sectorTick };
+  });
+
+  const currentAng = angleForIndex(index);
+
+  const polarToXY = (rPct: number, angDeg: number) => {
+    const rad = (angDeg * Math.PI) / 180;
+    // center at right-middle: (100, 50) in viewBox 0..100 x 0..100
+    return {
+      x: 100 + Math.sin(rad) * rPct,
+      y: 50 - Math.cos(rad) * rPct,
     };
   };
-  const move = (clientX: number) => {
-    const d = dragging.current;
-    if (!d) return;
-    // ~1 step per 1/steps of the dial width
-    const stepPx = d.width / steps;
-    const delta = Math.round((clientX - d.startX) / stepPx);
-    const next = ((d.startIndex - delta) % steps + steps) % steps;
-    if (next !== index) onChange(next);
-  };
-  const end = () => {
-    dragging.current = null;
-  };
-
-  // Render tick marks across the dial — calibrated screw-gauge band
-  const ticks = Array.from({ length: 80 }, (_, i) => i);
-  // rotation in deg for the moving band
-  const offset = (index / steps) * 100; // percent shift
 
   return (
     <div
       ref={ref}
       role="slider"
-      aria-label="Adjust orbit"
+      aria-label="Adjust orbit sector"
       aria-valuemin={0}
       aria-valuemax={steps - 1}
       aria-valuenow={index}
       tabIndex={0}
-      className={`relative h-12 w-full select-none touch-none overflow-hidden rounded-sm border border-ivory/12 bg-obsidian/60 backdrop-blur-xl ${className}`}
+      className={`relative h-full w-full select-none touch-none ${className}`}
       onPointerDown={(e) => {
+        dragging.current = true;
         (e.target as Element).setPointerCapture?.(e.pointerId);
-        start(e.clientX);
+        const next = indexForPointer(e.clientX, e.clientY);
+        if (next !== index) onChange(next);
       }}
-      onPointerMove={(e) => move(e.clientX)}
-      onPointerUp={end}
-      onPointerCancel={end}
+      onPointerMove={(e) => {
+        if (!dragging.current) return;
+        const next = indexForPointer(e.clientX, e.clientY);
+        if (next !== index) onChange(next);
+      }}
+      onPointerUp={() => {
+        dragging.current = false;
+      }}
+      onPointerCancel={() => {
+        dragging.current = false;
+      }}
       onKeyDown={(e) => {
-        if (e.key === "ArrowLeft")
+        if (e.key === "ArrowUp" || e.key === "ArrowLeft")
           onChange((index - 1 + steps) % steps);
-        if (e.key === "ArrowRight") onChange((index + 1) % steps);
+        if (e.key === "ArrowDown" || e.key === "ArrowRight")
+          onChange((index + 1) % steps);
       }}
     >
-      {/* Center indicator */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-0 z-10 h-full w-px -translate-x-1/2"
-        style={{
-          background:
-            "linear-gradient(180deg, transparent 0%, rgba(212,168,116,0.95) 30%, rgba(212,168,116,0.95) 70%, transparent 100%)",
-          boxShadow: "0 0 12px rgba(212,168,116,0.55)",
-        }}
-      />
-      {/* Edge fades */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-obsidian to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-obsidian to-transparent" />
-
-      {/* Moving tick band */}
-      <div
-        className="absolute inset-y-0 left-0 flex items-center"
-        style={{
-          width: "200%",
-          transform: `translateX(${-offset - 50}%)`,
-          transition: dragging.current
-            ? "none"
-            : "transform 600ms cubic-bezier(0.16,1,0.3,1)",
-        }}
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+        className="h-full w-full overflow-visible"
+        aria-hidden
       >
-        {ticks.concat(ticks).map((t, i) => {
-          const major = t % 5 === 0;
-          const sectorTick = t % 10 === 0;
+        {/* outer + inner arc rails */}
+        {[78, 84, 90].map((r, i) => {
+          const a0 = polarToXY(r, -half);
+          const a1 = polarToXY(r, half);
+          // large-arc-flag=1 because arcDeg > 180
           return (
-            <div
-              key={i}
-              className="flex h-full flex-1 flex-col items-center justify-center"
-            >
-              <span
-                className="block w-px bg-ivory"
-                style={{
-                  height: sectorTick ? "70%" : major ? "45%" : "25%",
-                  opacity: sectorTick ? 0.9 : major ? 0.5 : 0.25,
-                }}
-              />
-            </div>
+            <path
+              key={r}
+              d={`M ${a0.x} ${a0.y} A ${r} ${r} 0 1 0 ${a1.x} ${a1.y}`}
+              fill="none"
+              stroke="rgba(232,224,210,1)"
+              strokeOpacity={0.08 + i * 0.04}
+              strokeWidth={i === 2 ? 0.25 : 0.12}
+            />
           );
         })}
-      </div>
 
-      {/* Label strip */}
-      <div className="pointer-events-none absolute inset-x-0 -bottom-px z-20 flex justify-center">
-        <span className="translate-y-full pt-2 font-signature text-[0.65rem] italic tracking-[0.18em] text-bronze-glow">
-          {/* label rendered outside */}
-        </span>
-      </div>
+        {/* Ticks */}
+        {ticks.map((t, i) => {
+          const inner = t.sectorTick ? 76 : t.major ? 80 : 82;
+          const outer = t.sectorTick ? 90 : t.major ? 88 : 86;
+          const p0 = polarToXY(inner, t.ang);
+          const p1 = polarToXY(outer, t.ang);
+          return (
+            <line
+              key={i}
+              x1={p0.x}
+              y1={p0.y}
+              x2={p1.x}
+              y2={p1.y}
+              stroke="rgba(232,224,210,1)"
+              strokeOpacity={t.sectorTick ? 0.85 : t.major ? 0.45 : 0.2}
+              strokeWidth={t.sectorTick ? 0.35 : t.major ? 0.18 : 0.1}
+              strokeLinecap="round"
+            />
+          );
+        })}
+
+        {/* Current-position needle */}
+        {(() => {
+          const a = currentAng;
+          const p0 = polarToXY(70, a);
+          const p1 = polarToXY(94, a);
+          return (
+            <>
+              <line
+                x1={p0.x}
+                y1={p0.y}
+                x2={p1.x}
+                y2={p1.y}
+                stroke="rgb(212,168,116)"
+                strokeWidth={0.7}
+                strokeLinecap="round"
+                style={{
+                  filter: "drop-shadow(0 0 1.6px rgba(212,168,116,0.9))",
+                  transition: "all 600ms cubic-bezier(0.16,1,0.3,1)",
+                }}
+              />
+              <circle
+                cx={polarToXY(82, a).x}
+                cy={polarToXY(82, a).y}
+                r={1.8}
+                fill="rgb(232,224,210)"
+                style={{
+                  filter: "drop-shadow(0 0 3px rgba(212,168,116,0.85))",
+                  transition: "all 600ms cubic-bezier(0.16,1,0.3,1)",
+                }}
+              />
+            </>
+          );
+        })()}
+      </svg>
     </div>
   );
 }
 
 /**
  * Full orbital ecosystem block. Mobile: orbit on top (full width), copy
- * below, gear dial below that. Desktop: split with orbit on the right.
- * Interactive — rotate the orbit, cycle active sector with the dial.
+ * below, gear dial radial on the left. Desktop: split with orbit + radial
+ * gear on the right column. Sector selection is mirrored to the URL hash
+ * (e.g. #culture) so the page can be deep-linked at a given telescope
+ * position.
  */
 export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
-  const [index, setIndex] = useState(0);
-  const active = ECO_NODES[index];
+  // Initial index from URL hash, if any.
+  const initial =
+    typeof window !== "undefined"
+      ? Math.max(
+          0,
+          SECTORS.findIndex(
+            (s) => s.slug === window.location.hash.replace(/^#/, ""),
+          ),
+        )
+      : -1;
+  const [index, setIndex] = useState(initial >= 0 ? initial : 0);
+  const sector = SECTORS[index];
 
-  // Rotation applied to the orbit + nodes so that node[index] sits at the
-  // 12 o'clock position. Step = 360 / nodes.
-  const stepDeg = 360 / ECO_NODES.length;
+  // Sync index -> URL hash, replace (don't push history).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const next = `#${SECTORS[index].slug}`;
+    if (window.location.hash !== next) {
+      history.replaceState(null, "", `${window.location.pathname}${window.location.search}${next}`);
+    }
+  }, [index]);
+
+  // Respond to back/forward changing the hash.
+  useEffect(() => {
+    const onHash = () => {
+      const slug = window.location.hash.replace(/^#/, "");
+      const i = SECTORS.findIndex((s) => s.slug === slug);
+      if (i >= 0 && i !== index) setIndex(i);
+    };
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, [index]);
+
+  const stepDeg = 360 / SECTORS.length;
   const rotation = -index * stepDeg;
 
-  const coords = ECO_NODES.map((_, i) => {
-    const a = (i / ECO_NODES.length) * Math.PI * 2 - Math.PI / 2;
+  const coords = SECTORS.map((_, i) => {
+    const a = (i / SECTORS.length) * Math.PI * 2 - Math.PI / 2;
     return { x: 50 + Math.cos(a) * 42, y: 50 + Math.sin(a) * 42 };
   });
 
@@ -231,11 +333,11 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
     <section
       data-zone={id}
       data-section={id}
+      data-section-label="Ecosystem"
       className="section-ecosystem relative px-4 py-28 sm:px-6 md:px-10 md:py-36"
     >
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1fr_1.15fr] lg:items-center lg:gap-16">
-        {/* MOBILE/TABLET: orbit FIRST (full vw), then copy, then gear */}
-        {/* DESKTOP: copy on left */}
+        {/* COPY */}
         <div className="order-2 lg:order-1">
           <p className="eyebrow mb-8">III — The Ecosystem</p>
           <p className="font-display text-2xl font-light leading-[1.2] text-ivory sm:text-3xl lg:text-4xl">
@@ -249,80 +351,95 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
               data-eco-active
               className="font-signature text-sm italic tracking-normal text-bronze-glow"
             >
-              {active}
+              {sector.name}
             </span>
           </p>
+          <p className="mt-3 max-w-md font-display text-lg font-light leading-snug text-ivory/85">
+            {sector.tagline}
+          </p>
 
-          {/* Gear dial — all screens */}
-          <div className="mt-10 max-w-md">
-            <div className="mb-3 flex items-center justify-between text-[0.55rem] uppercase tracking-[0.4em] text-stone/55">
-              <span>Adjust</span>
-              <span>{String(index + 1).padStart(2, "0")} / {String(ECO_NODES.length).padStart(2, "0")}</span>
-            </div>
-            <GearDial
-              steps={ECO_NODES.length}
-              index={index}
-              onChange={setIndex}
-            />
-            <p className="mt-3 text-[0.55rem] uppercase tracking-[0.35em] text-stone/45">
-              Drag · Scroll · ←/→
+          <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+            <Link
+              to="/sectors/$sector"
+              params={{ sector: sector.slug }}
+              className="bronze-line inline-flex items-center gap-3 border-b border-stone/30 pb-2 text-xs uppercase tracking-[0.4em] text-ivory hover:text-bronze-glow"
+            >
+              <span>Open {sector.name}</span>
+              <span aria-hidden className="text-bronze">→</span>
+            </Link>
+            <p className="text-[0.55rem] uppercase tracking-[0.4em] text-stone/55">
+              {String(index + 1).padStart(2, "0")} /{" "}
+              {String(SECTORS.length).padStart(2, "0")} · Drag · Scroll · ←/→
             </p>
           </div>
         </div>
 
-        {/* ORBIT — full width on mobile, right column on desktop */}
+        {/* ORBIT + RADIAL GEAR */}
         <div className="order-1 lg:order-2">
-          <div className="relative mx-auto aspect-square w-full max-w-[min(92vw,38rem)]">
-            <div
-              className="ecosystem-stage absolute inset-0"
-              style={{
-                transform: `rotate(${rotation}deg)`,
-                transition:
-                  "transform 900ms cubic-bezier(0.16,1,0.3,1)",
-                transformOrigin: "center center",
-              }}
-            >
-              <OrbitRings />
-              {ECO_NODES.map((node, i) => {
-                const { x, y } = coords[i];
-                const isActive = i === index;
-                return (
-                  <button
-                    key={node}
-                    type="button"
-                    onClick={() => setIndex(i)}
-                    className={`eco-node absolute -translate-x-1/2 -translate-y-1/2 ${isActive ? "is-active" : ""}`}
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                  >
-                    <div
-                      className="eco-node-disc relative flex h-[clamp(3rem,9vw,5.25rem)] w-[clamp(3rem,9vw,5.25rem)] items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.5vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/85"
-                      style={{
-                        // Counter-rotate so labels stay upright
-                        transform: `rotate(${-rotation}deg)`,
-                      }}
-                    >
-                      <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
-                      <div className="absolute inset-0 rounded-full border border-ivory/12" />
-                      <span className="relative px-1">{node}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="relative mx-auto w-full max-w-[min(96vw,42rem)]">
+            <div className="relative aspect-square">
+              {/* Radial gear dial — anchored to LEFT of orbit, arcing around it */}
+              <div className="pointer-events-auto absolute -left-[12%] top-1/2 z-20 h-[118%] w-[60%] -translate-y-1/2">
+                <RadialGearDial
+                  steps={SECTORS.length}
+                  index={index}
+                  onChange={setIndex}
+                />
+              </div>
 
-            {/* SOLENA core — does NOT rotate */}
-            <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-[28%] w-[28%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
-              <div className="absolute inset-0 rounded-full bg-obsidian/75 backdrop-blur-2xl" />
+              {/* Orbit stage */}
               <div
-                className="absolute inset-0 rounded-full border border-ivory/10"
+                className="ecosystem-stage absolute inset-0"
                 style={{
-                  boxShadow:
-                    "0 0 60px rgba(184,134,73,0.20), inset 0 0 40px rgba(0,0,0,0.6)",
+                  transform: `rotate(${rotation}deg)`,
+                  transition: "transform 900ms cubic-bezier(0.16,1,0.3,1)",
+                  transformOrigin: "center center",
                 }}
-              />
-              <span className="relative font-signature text-base tracking-[0.22em] text-ivory sm:text-xl lg:text-2xl">
-                SOLENA
-              </span>
+              >
+                <OrbitRings />
+                {SECTORS.map((node, i) => {
+                  const { x, y } = coords[i];
+                  const isActive = i === index;
+                  return (
+                    <button
+                      key={node.slug}
+                      type="button"
+                      onClick={() => setIndex(i)}
+                      onDoubleClick={() => {
+                        // double-click navigates immediately
+                        window.location.href = `/sectors/${node.slug}`;
+                      }}
+                      className={`eco-node absolute -translate-x-1/2 -translate-y-1/2 ${isActive ? "is-active" : ""}`}
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                      aria-label={`Select ${node.name}`}
+                    >
+                      <div
+                        className="eco-node-disc relative flex h-[clamp(3rem,9vw,5.25rem)] w-[clamp(3rem,9vw,5.25rem)] items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.5vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/85"
+                        style={{ transform: `rotate(${-rotation}deg)` }}
+                      >
+                        <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
+                        <div className="absolute inset-0 rounded-full border border-ivory/12" />
+                        <span className="relative px-1">{node.name}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* SOLENA core */}
+              <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-[28%] w-[28%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
+                <div className="absolute inset-0 rounded-full bg-obsidian/75 backdrop-blur-2xl" />
+                <div
+                  className="absolute inset-0 rounded-full border border-ivory/10"
+                  style={{
+                    boxShadow:
+                      "0 0 60px rgba(184,134,73,0.20), inset 0 0 40px rgba(0,0,0,0.6)",
+                  }}
+                />
+                <span className="relative font-signature text-base tracking-[0.22em] text-ivory sm:text-xl lg:text-2xl">
+                  SOLENA
+                </span>
+              </div>
             </div>
           </div>
         </div>
