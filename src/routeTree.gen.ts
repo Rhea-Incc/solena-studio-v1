@@ -13,8 +13,14 @@ import { Route as ThesisRouteImport } from './routes/thesis'
 import { Route as JournalRouteImport } from './routes/journal'
 import { Route as EcosystemRouteImport } from './routes/ecosystem'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SectorsSectorRouteImport } from './routes/sectors.$sector'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminSubmissionsRouteImport } from './routes/admin.submissions'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 
 const ThesisRoute = ThesisRouteImport.update({
   id: '/thesis',
@@ -36,71 +42,137 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const SectorsSectorRoute = SectorsSectorRouteImport.update({
   id: '/sectors/$sector',
   path: '/sectors/$sector',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubmissionsRoute = AdminSubmissionsRouteImport.update({
+  id: '/submissions',
+  path: '/submissions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/ecosystem': typeof EcosystemRoute
   '/journal': typeof JournalRoute
   '/thesis': typeof ThesisRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/sectors/$sector': typeof SectorsSectorRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/ecosystem': typeof EcosystemRoute
   '/journal': typeof JournalRoute
   '/thesis': typeof ThesisRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/sectors/$sector': typeof SectorsSectorRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/ecosystem': typeof EcosystemRoute
   '/journal': typeof JournalRoute
   '/thesis': typeof ThesisRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/submissions': typeof AdminSubmissionsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/sectors/$sector': typeof SectorsSectorRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/auth'
     | '/contact'
     | '/ecosystem'
     | '/journal'
     | '/thesis'
+    | '/admin/analytics'
+    | '/admin/submissions'
+    | '/admin/users'
     | '/sectors/$sector'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/contact'
     | '/ecosystem'
     | '/journal'
     | '/thesis'
+    | '/admin/analytics'
+    | '/admin/submissions'
+    | '/admin/users'
     | '/sectors/$sector'
+    | '/admin'
   id:
     | '__root__'
     | '/'
+    | '/admin'
+    | '/auth'
     | '/contact'
     | '/ecosystem'
     | '/journal'
     | '/thesis'
+    | '/admin/analytics'
+    | '/admin/submissions'
+    | '/admin/users'
     | '/sectors/$sector'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   EcosystemRoute: typeof EcosystemRoute
   JournalRoute: typeof JournalRoute
@@ -138,12 +210,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/sectors/$sector': {
       id: '/sectors/$sector'
@@ -152,11 +245,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SectorsSectorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/submissions': {
+      id: '/admin/submissions'
+      path: '/submissions'
+      fullPath: '/admin/submissions'
+      preLoaderRoute: typeof AdminSubmissionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminSubmissionsRoute: typeof AdminSubmissionsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminSubmissionsRoute: AdminSubmissionsRoute,
+  AdminUsersRoute: AdminUsersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   EcosystemRoute: EcosystemRoute,
   JournalRoute: JournalRoute,

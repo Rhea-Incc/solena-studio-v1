@@ -85,12 +85,12 @@ function AdminLayout() {
     );
   }
 
-  const nav = [
+  const nav: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
     { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
     { to: "/admin/submissions", label: "Submissions", icon: Inbox },
     { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
     { to: "/admin/users", label: "Users & Roles", icon: Users },
-  ] as const;
+  ];
 
   const isActive = (to: string, exact?: boolean) =>
     exact ? pathname === to : pathname === to || pathname.startsWith(to + "/");
