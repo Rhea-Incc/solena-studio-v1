@@ -401,17 +401,15 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
                   const { x, y } = coords[i];
                   const isActive = i === index;
                   return (
-                    <button
+                    <Link
                       key={node.slug}
-                      type="button"
-                      onClick={() => setIndex(i)}
-                      onDoubleClick={() => {
-                        // double-click navigates immediately
-                        window.location.href = `/sectors/${node.slug}`;
-                      }}
+                      to="/sectors/$sector"
+                      params={{ sector: node.slug }}
+                      onPointerEnter={() => setIndex(i)}
+                      onFocus={() => setIndex(i)}
                       className={`eco-node absolute -translate-x-1/2 -translate-y-1/2 ${isActive ? "is-active" : ""}`}
                       style={{ left: `${x}%`, top: `${y}%` }}
-                      aria-label={`Select ${node.name}`}
+                      aria-label={`Open ${node.name}`}
                     >
                       <div
                         className="eco-node-disc relative flex h-[clamp(3rem,9vw,5.25rem)] w-[clamp(3rem,9vw,5.25rem)] items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.5vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/85"
@@ -421,7 +419,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
                         <div className="absolute inset-0 rounded-full border border-ivory/12" />
                         <span className="relative px-1">{node.name}</span>
                       </div>
-                    </button>
+                    </Link>
                   );
                 })}
               </div>

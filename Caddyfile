@@ -1,50 +1,37 @@
-# global options
+# Global Caddy config for Railway / any host that runs Caddy.
+# Serves the statically pre-rendered TanStack Start output.
 {
 	admin off
 	persist_config off
 	auto_https off
 
-	log {
-		format json
-	}
+	log { format json }
 
 	servers {
-		trusted_proxies static private_ranges 100.0.0.0/8 # trust railway's proxy
+		trusted_proxies static private_ranges 100.0.0.0/8
 	}
 }
 
-# site block, listens on the $PORT environment variable, automatically assigned by railway
 :{$PORT:80} {
-	log {
-		format json
-	}
+	log { format json }
 
 	respond /health 200
 
-	# Security headers
 	header {
-		# Prevent some browsers from MIME-sniffing a response away from the declared Content-Type
 		X-Content-Type-Options "nosniff"
-		# Remove Server header
 		-Server
 	}
 
-	# TanStack Start server output
+	# Pre-rendered static output from `vite build` (nitro preset: static).
 	root * /app/dist/server
 
-	# Handle static files
 	file_server {
 		hide .git
 		hide .env*
 	}
 
-	# Compression with more formats
-	encode {
-		gzip
-		zstd
-	}
+	encode { gzip zstd }
 
-	# match against direct against HTML file matches, folder-level index.html, and optionally fallback to root index.html
+	# SPA-style fallback: try the file, then folder index, then root index.
 	try_files {path} {path}.html {path}/index.html /index.html
 }
-

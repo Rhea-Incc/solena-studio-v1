@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 
 /**
- * Right-rail scroll tracker. Auto-scans the page for [data-section]
- * elements and highlights the one currently in view. Renders on all
- * viewport sizes (compact on mobile).
+ * Right-rail scroll tracker. Auto-scans the page for [data-section] elements
+ * and highlights the one currently in view. Supports nested subsections via
+ * `data-section-level` ("1" | "2" | "3"). The label and tick indent
+ * progressively for deeper levels — a hierarchical "table of contents" feel.
  */
+type Item = { id: string; label: string; level: number };
+
 export function ScrollTracker() {
-  const [sections, setSections] = useState<{ id: string; label: string }[]>([]);
+  const [sections, setSections] = useState<Item[]>([]);
   const [active, setActive] = useState<string | null>(null);
 
   useEffect(() => {
@@ -20,11 +23,11 @@ export function ScrollTracker() {
           label:
             el.dataset.sectionLabel ||
             el.dataset.section!.replace(/[-_]/g, " "),
+          level: Math.max(1, Math.min(3, Number(el.dataset.sectionLevel) || 1)),
         })),
       );
     };
     scan();
-    // re-scan after route transitions / lazy mounts
     const t = window.setTimeout(scan, 250);
     return () => window.clearTimeout(t);
   }, []);
@@ -37,7 +40,6 @@ export function ScrollTracker() {
 
     const io = new IntersectionObserver(
       (entries) => {
-        // Pick the entry closest to top of viewport that is intersecting.
         const visible = entries
           .filter((e) => e.isIntersecting)
           .sort(
@@ -57,6 +59,11 @@ export function ScrollTracker() {
 
   if (!sections.length) return null;
 
+  // Indent steps in px per level beyond level 1.
+  const indentFor = (lvl: number) => (lvl - 1) * 14;
+  // Tick base widths shrink at deeper levels.
+  const tickWidthFor = (lvl: number) => 18 - (lvl - 1) * 5;
+
   return (
     <nav
       aria-label="Page sections"
@@ -69,9 +76,11 @@ export function ScrollTracker() {
             <li
               key={s.id}
               className={`tracker-row flex items-center justify-end gap-3 ${isActive ? "is-active" : ""}`}
+              style={{ paddingRight: `${indentFor(s.level)}px` }}
             >
               <span
                 className={`tracker-label font-signature text-[0.65rem] uppercase tracking-[0.3em] text-stone/70 opacity-0 transition-opacity duration-300 ${isActive ? "text-bronze-glow" : ""}`}
+                style={{ fontSize: s.level > 1 ? "0.58rem" : undefined }}
               >
                 {s.label}
               </span>
@@ -84,6 +93,10 @@ export function ScrollTracker() {
                     ?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
                 className="tracker-tick block h-px bg-ivory/60"
+                style={{
+                  width: `${tickWidthFor(s.level)}px`,
+                  opacity: s.level > 1 ? 0.45 : 0.7,
+                }}
                 aria-label={`Jump to ${s.label}`}
               />
             </li>
