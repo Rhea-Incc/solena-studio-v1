@@ -15,24 +15,28 @@ export default defineConfig({
   nitro: {
     preset: "static",
     output: { dir: "dist", publicDir: "dist/server" },
-    prerender: {
-      crawlLinks: true,
-      failOnError: false,
-      routes: [
-        "/",
-        "/thesis",
-        "/ecosystem",
-        "/journal",
-        "/contact",
-        "/sectors/real-estate",
-        "/sectors/technology",
-        "/sectors/hospitality",
-        "/sectors/luxury",
-        "/sectors/media",
-        "/sectors/ventures",
-        "/sectors/culture",
-        "/sectors/capital",
-      ],
-    },
+    // `prerender` is a valid nitro option but not in the lovable wrapper's
+    // typed surface — cast to satisfy TS.
+    ...({
+      prerender: {
+        crawlLinks: true,
+        failOnError: false,
+        routes: [
+          "/",
+          "/thesis",
+          "/ecosystem",
+          "/journal",
+          "/contact",
+          "/sectors/real-estate",
+          "/sectors/technology",
+          "/sectors/hospitality",
+          "/sectors/luxury",
+          "/sectors/media",
+          "/sectors/ventures",
+          "/sectors/culture",
+          "/sectors/capital",
+        ],
+      },
+    } as Record<string, unknown>),
   },
 });
