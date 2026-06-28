@@ -396,6 +396,10 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
                   transformOrigin: "center center",
                 }}
               >
+                {/* ambient slow drift layer — independent rings */}
+                <div className="ecosystem-drift pointer-events-none absolute inset-0">
+                  <OrbitRings />
+                </div>
                 <OrbitRings />
                 {SECTORS.map((node, i) => {
                   const { x, y } = coords[i];
@@ -417,12 +421,14 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
                       >
                         <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
                         <div className="absolute inset-0 rounded-full border border-ivory/12" />
+                        {isActive && <span className="eco-ping" aria-hidden />}
                         <span className="relative px-1">{node.name}</span>
                       </div>
                     </Link>
                   );
                 })}
               </div>
+
 
               {/* SOLENA core */}
               <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-[28%] w-[28%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
