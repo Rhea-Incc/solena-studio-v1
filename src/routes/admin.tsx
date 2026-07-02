@@ -32,6 +32,7 @@ function AdminLayout() {
         navigate({ to: "/auth" });
         return;
       }
+      await supabase.rpc("bootstrap_first_admin");
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -131,7 +132,7 @@ function AdminLayout() {
             Signed in as <span className="text-ivory">{state.email}</span>. This account has no admin role.
           </p>
           <p className="mt-2 text-xs uppercase tracking-[0.35em] text-stone/50">
-            Ask an existing admin to grant you access.
+            Ask an existing admin to grant access, or sign out and use the first staff account.
           </p>
           <button onClick={signOut} className="mt-8 border border-ivory/20 px-6 py-2 text-xs uppercase tracking-[0.4em] text-ivory hover:border-bronze-glow hover:text-bronze-glow">
             Sign out

@@ -27,17 +27,24 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${window.location.origin}/admin` },
         });
         if (error) throw error;
-        toast.success("Account created. Check your email to confirm, then sign in.");
-        setMode("signin");
+        if (data.session) {
+          await supabase.rpc("bootstrap_first_admin");
+          toast.success("Account created. Opening admin.");
+          navigate({ to: "/admin" });
+        } else {
+          toast.success("Account created. Confirm your email, then sign in.");
+          setMode("signin");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        await supabase.rpc("bootstrap_first_admin");
         navigate({ to: "/admin" });
       }
     } catch (err) {
@@ -101,7 +108,7 @@ function AuthPage() {
           </button>
         </div>
         <p className="mt-6 text-center text-[0.65rem] uppercase tracking-[0.35em] text-stone/40">
-          New accounts have no role. An existing admin must grant access.
+          First staff account is promoted automatically. Later accounts need admin approval.
         </p>
       </div>
     </div>

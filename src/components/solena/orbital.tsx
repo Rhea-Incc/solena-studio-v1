@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "@tanstack/react-router";
 
 export type Sector = {
@@ -94,39 +94,24 @@ function RadialGearDial({
   const ref = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
 
-  // Arc spans 220° on the LEFT side, opening toward the right (the orbit).
-  // We map index 0..steps-1 onto angles topAngle..bottomAngle measured
-  // clockwise from 12 o'clock. Left side = 180°..360° in standard math.
-  // We use angle in *degrees from north*, going counter-clockwise (CCW
-  // toward the left). So index 0 -> -110°, index last -> +110°.
-  const arcDeg = 220;
-  const half = arcDeg / 2;
+  const startDeg = 180;
+  const endDeg = 270;
+  const arcDeg = endDeg - startDeg;
   const angleForIndex = (i: number) =>
-    -half + (i / (steps - 1)) * arcDeg;
+    startDeg + (i / (steps - 1)) * arcDeg;
 
   const indexForPointer = (clientX: number, clientY: number) => {
     const el = ref.current;
     if (!el) return index;
     const rect = el.getBoundingClientRect();
-    // Center of the arc is anchored at the RIGHT edge of the dial,
-    // vertically centered.
     const cx = rect.right;
-    const cy = rect.top + rect.height / 2;
+    const cy = rect.bottom;
     const dx = clientX - cx;
     const dy = clientY - cy;
-    // angle from north (12 o'clock), positive = right (CW), negative = left
-    // We want negative on the left side. atan2(dx, -dy) gives that.
-    let a = (Math.atan2(dx, -dy) * 180) / Math.PI; // -180..180
-    // We expect a to be on the left half: roughly -180..-arcDeg/2 ∪ arcDeg/2..180
-    // Normalize to the CCW-left convention used by angleForIndex: -180..+180
-    // Mirror: on the left, dx<0, so a < 0. Map a from [-180,-half] U [half,180]
-    // into a continuous [-half..+half] by flipping sign appropriately.
-    if (a > 0) a = a - 180;
-    else a = a + 180;
-    // Now a is roughly in [-180, 180] again but mirrored around the left
-    // axis. Clamp:
-    a = Math.max(-half, Math.min(half, a));
-    const t = (a + half) / arcDeg;
+    let a = (Math.atan2(dy, dx) * 180) / Math.PI;
+    if (a < 0) a += 360;
+    a = Math.max(startDeg, Math.min(endDeg, a));
+    const t = (a - startDeg) / arcDeg;
     return Math.round(t * (steps - 1));
   };
 
@@ -147,7 +132,7 @@ function RadialGearDial({
   const tickCount = 81;
   const ticks = Array.from({ length: tickCount }, (_, i) => {
     const t = i / (tickCount - 1);
-    const ang = -half + t * arcDeg;
+    const ang = startDeg + t * arcDeg;
     const major = i % 5 === 0;
     const sectorTick = Math.round(t * (steps - 1)) !== Math.round(((i - 1) / (tickCount - 1)) * (steps - 1));
     return { ang, major, sectorTick };
@@ -157,10 +142,9 @@ function RadialGearDial({
 
   const polarToXY = (rPct: number, angDeg: number) => {
     const rad = (angDeg * Math.PI) / 180;
-    // center at right-middle: (100, 50) in viewBox 0..100 x 0..100
     return {
-      x: 100 + Math.sin(rad) * rPct,
-      y: 50 - Math.cos(rad) * rPct,
+      x: 100 + Math.cos(rad) * rPct,
+      y: 100 + Math.sin(rad) * rPct,
     };
   };
 
@@ -205,14 +189,13 @@ function RadialGearDial({
         aria-hidden
       >
         {/* outer + inner arc rails */}
-        {[78, 84, 90].map((r, i) => {
-          const a0 = polarToXY(r, -half);
-          const a1 = polarToXY(r, half);
-          // large-arc-flag=1 because arcDeg > 180
+        {[64, 72, 80].map((r, i) => {
+          const a0 = polarToXY(r, startDeg);
+          const a1 = polarToXY(r, endDeg);
           return (
             <path
               key={r}
-              d={`M ${a0.x} ${a0.y} A ${r} ${r} 0 1 0 ${a1.x} ${a1.y}`}
+              d={`M ${a0.x} ${a0.y} A ${r} ${r} 0 0 1 ${a1.x} ${a1.y}`}
               fill="none"
               stroke="rgba(232,224,210,1)"
               strokeOpacity={0.08 + i * 0.04}
@@ -223,8 +206,8 @@ function RadialGearDial({
 
         {/* Ticks */}
         {ticks.map((t, i) => {
-          const inner = t.sectorTick ? 76 : t.major ? 80 : 82;
-          const outer = t.sectorTick ? 90 : t.major ? 88 : 86;
+          const inner = t.sectorTick ? 60 : t.major ? 66 : 70;
+          const outer = t.sectorTick ? 82 : t.major ? 79 : 75;
           const p0 = polarToXY(inner, t.ang);
           const p1 = polarToXY(outer, t.ang);
           return (
@@ -245,8 +228,8 @@ function RadialGearDial({
         {/* Current-position needle */}
         {(() => {
           const a = currentAng;
-          const p0 = polarToXY(70, a);
-          const p1 = polarToXY(94, a);
+          const p0 = polarToXY(56, a);
+          const p1 = polarToXY(86, a);
           return (
             <>
               <line
@@ -263,8 +246,8 @@ function RadialGearDial({
                 }}
               />
               <circle
-                cx={polarToXY(82, a).x}
-                cy={polarToXY(82, a).y}
+                cx={polarToXY(72, a).x}
+                cy={polarToXY(72, a).y}
                 r={1.8}
                 fill="rgb(232,224,210)"
                 style={{
@@ -321,13 +304,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
     return () => window.removeEventListener("hashchange", onHash);
   }, [index]);
 
-  const stepDeg = 360 / SECTORS.length;
-  const rotation = -index * stepDeg;
-
-  const coords = SECTORS.map((_, i) => {
-    const a = (i / SECTORS.length) * Math.PI * 2 - Math.PI / 2;
-    return { x: 50 + Math.cos(a) * 42, y: 50 + Math.sin(a) * 42 };
-  });
+  const ringFor = (i: number) => i % 3;
 
   return (
     <section
@@ -379,7 +356,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
           <div className="relative mx-auto w-full max-w-[min(96vw,42rem)]">
             <div className="relative aspect-square">
               {/* Radial gear dial — anchored to LEFT of orbit, arcing around it */}
-              <div className="pointer-events-auto absolute -left-[12%] top-1/2 z-20 h-[118%] w-[60%] -translate-y-1/2">
+              <div className="pointer-events-auto absolute -left-[9%] -top-[9%] z-30 h-[52%] w-[52%] sm:-left-[12%] sm:-top-[12%]">
                 <RadialGearDial
                   steps={SECTORS.length}
                   index={index}
@@ -388,43 +365,44 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
               </div>
 
               {/* Orbit stage */}
-              <div
-                className="ecosystem-stage absolute inset-0"
-                style={{
-                  transform: `rotate(${rotation}deg)`,
-                  transition: "transform 900ms cubic-bezier(0.16,1,0.3,1)",
-                  transformOrigin: "center center",
-                }}
-              >
+              <div className="ecosystem-stage absolute inset-0">
                 {/* ambient slow drift layer — independent rings */}
                 <div className="ecosystem-drift pointer-events-none absolute inset-0">
                   <OrbitRings />
                 </div>
                 <OrbitRings />
                 {SECTORS.map((node, i) => {
-                  const { x, y } = coords[i];
                   const isActive = i === index;
+                  const ring = ringFor(i);
+                  const start = (i / SECTORS.length) * 360 - 90;
+                  const radius = [32, 38, 44][ring];
+                  const duration = [86, 112, 138][ring];
                   return (
-                    <Link
+                    <div
                       key={node.slug}
-                      to="/sectors/$sector"
-                      params={{ sector: node.slug }}
-                      onPointerEnter={() => setIndex(i)}
-                      onFocus={() => setIndex(i)}
-                      className={`eco-node absolute -translate-x-1/2 -translate-y-1/2 ${isActive ? "is-active" : ""}`}
-                      style={{ left: `${x}%`, top: `${y}%` }}
-                      aria-label={`Open ${node.name}`}
+                      className={`eco-orbit-lane energy-${ring + 1}`}
+                      style={{
+                        "--orbit-start": `${start}deg`,
+                        "--orbit-radius": `${radius}%`,
+                        "--orbit-duration": `${duration}s`,
+                      } as CSSProperties}
                     >
-                      <div
-                        className="eco-node-disc relative flex h-[clamp(3rem,9vw,5.25rem)] w-[clamp(3rem,9vw,5.25rem)] items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.5vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/85"
-                        style={{ transform: `rotate(${-rotation}deg)` }}
+                      <Link
+                        to="/sectors/$sector"
+                        params={{ sector: node.slug }}
+                        onPointerEnter={() => setIndex(i)}
+                        onFocus={() => setIndex(i)}
+                        className={`eco-node absolute left-1/2 top-1/2 ${isActive ? "is-active" : ""}`}
+                        aria-label={`Open ${node.name}`}
                       >
-                        <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
-                        <div className="absolute inset-0 rounded-full border border-ivory/12" />
-                        {isActive && <span className="eco-ping" aria-hidden />}
-                        <span className="relative px-1">{node.name}</span>
-                      </div>
-                    </Link>
+                        <div className="eco-node-disc relative flex h-[clamp(2.75rem,8vw,5rem)] w-[clamp(2.75rem,8vw,5rem)] items-center justify-center rounded-full text-center text-[clamp(0.52rem,1.35vw,0.76rem)] font-light leading-tight tracking-[0.04em] text-ivory/85">
+                          <div className="absolute inset-0 rounded-full bg-ivory/[0.035] backdrop-blur-xl" />
+                          <div className="absolute inset-0 rounded-full border border-ivory/12" />
+                          {isActive && <span className="eco-ping" aria-hidden />}
+                          <span className="relative px-1">{node.name}</span>
+                        </div>
+                      </Link>
+                    </div>
                   );
                 })}
               </div>
