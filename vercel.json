@@ -3,6 +3,7 @@
   "buildCommand": "bun run build",
   "installCommand": "bun install",
   "framework": null,
+  "outputDirectory": "dist/server",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
