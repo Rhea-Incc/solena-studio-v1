@@ -459,8 +459,8 @@
   to { transform: rotate(calc(var(--orbit-start, 0deg) + 360deg)); }
 }
 @keyframes eco-orbit-counter {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { transform: rotate(calc(var(--orbit-start, 0deg) * -1)); }
+  to { transform: rotate(calc(var(--orbit-start, 0deg) * -1 - 360deg)); }
 }
 
 @keyframes eco-drift {
