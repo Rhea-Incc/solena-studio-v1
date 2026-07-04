@@ -346,6 +346,8 @@
   pointer-events: none;
   transform-origin: center center;
   will-change: transform;
+  transform: translateZ(0);
+  z-index: 3; /* sectors above the Solena core */
   animation: eco-orbit-continuous var(--orbit-duration, 110s) linear infinite;
 }
 /* All lanes rotate the same direction for a single coherent field */
@@ -358,7 +360,7 @@
   top: 50%;
   width: 0;
   height: 0;
-  transform: translateX(var(--orbit-radius, 40%));
+  transform: translate3d(var(--orbit-radius, 40%), 0, 0);
 }
 .eco-orbit-counter {
   transform-origin: center center;
@@ -366,6 +368,7 @@
   animation: eco-orbit-counter var(--orbit-duration, 110s) linear infinite;
   animation-direction: reverse;
 }
+
 
 .eco-node {
   pointer-events: auto;
@@ -386,13 +389,17 @@
       rgba(255, 255, 255, 0.02) 45%,
       rgba(212, 168, 116, 0.05) 100%
     );
-  backdrop-filter: blur(12px) saturate(130%);
-  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35),
     0 6px 22px rgba(0, 0, 0, 0.3);
 }
+/* Fallback for browsers/devices without backdrop-filter — use a solid tint */
+@supports not (backdrop-filter: blur(1px)) {
+  .eco-node-glass { background: rgba(20, 18, 24, 0.55); }
+}
+
 .eco-node-ring {
   border: 1px solid rgba(232, 224, 210, 0.16);
   box-shadow: inset 0 0 20px rgba(212, 168, 116, 0.06);
@@ -428,12 +435,15 @@
   background:
     radial-gradient(60% 60% at 50% 40%, rgba(255, 255, 255, 0.10), rgba(0, 0, 0, 0) 70%),
     linear-gradient(160deg, rgba(212, 168, 116, 0.14), rgba(0, 0, 0, 0.6));
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     inset 0 -2px 0 rgba(0, 0, 0, 0.5);
 }
+@supports not (backdrop-filter: blur(1px)) {
+  .eco-core-glass { background: rgba(10, 10, 14, 0.7); }
+}
+
 
 @keyframes eco-pulse {
   0%, 100% {
@@ -502,8 +512,9 @@
 }
 /* Coarse pointer (mobile) → drop heavy backdrop-filters for smooth FPS */
 @media (hover: none) and (pointer: coarse) {
-  .eco-node-glass { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .eco-core-glass { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .eco-node-glass { backdrop-filter: none; background: rgba(20, 18, 24, 0.5); }
+  .eco-core-glass { backdrop-filter: blur(6px); }
 }
+
 
 
