@@ -107,10 +107,14 @@ export function OrbitRings({
         );
       })}
 
-      {/* Energy pulses travelling along each primary lane */}
+      {/* Energy pulses — matched angular velocity, evenly spaced phases,
+          uniform opacity across all three rings for continuous, smooth motion. */}
       {primary.map((r, i) => {
         const circumference = 2 * Math.PI * r;
-        const dur = [11, 14, 18][i];
+        // Same period for all rings → identical angular velocity, no drift.
+        const dur = 14;
+        // Evenly-spaced phase offset (0, 1/3, 2/3 of the cycle).
+        const delay = -(dur * i) / primary.length;
         return (
           <circle
             key={`pulse-${r}`}
@@ -119,19 +123,20 @@ export function OrbitRings({
             r={r}
             fill="none"
             stroke="url(#orbPulse)"
-            strokeOpacity={0.9 - i * 0.18}
-            strokeWidth={0.55}
+            strokeOpacity={0.7}
+            strokeWidth={0.5}
             strokeLinecap="round"
             strokeDasharray={`${circumference * 0.14} ${circumference}`}
             style={{
               transformOrigin: `${cx}% ${cy}%`,
               animation: `eco-pulse-orbit ${dur}s linear infinite`,
-              animationDelay: `${-i * 2.3}s`,
+              animationDelay: `${delay}s`,
               mixBlendMode: "screen",
             }}
           />
         );
       })}
+
     </svg>
   );
 }
