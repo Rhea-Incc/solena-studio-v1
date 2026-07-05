@@ -20,6 +20,17 @@ export const SECTORS: Sector[] = [
 
 export const ECO_NODES = SECTORS.map((s) => s.name);
 
+const SECTOR_ORBITS = [
+  { radius: 43, duration: 156 },
+  { radius: 40, duration: 144 },
+  { radius: 37, duration: 132 },
+  { radius: 34, duration: 120 },
+  { radius: 31, duration: 108 },
+  { radius: 28, duration: 96 },
+  { radius: 25, duration: 84 },
+  { radius: 22, duration: 72 },
+] as const;
+
 /**
  * Glassmorphic orbit rings — three primary lanes matching sector radii,
  * plus a dense faint ladder. Outer lanes read strongest; inner lanes
@@ -36,7 +47,7 @@ export function OrbitRings({
   const cy = half && anchor === "bottom" ? 100 : 50;
 
   // Sector orbits (radii match React lane values below).
-  const primary = [44, 40, 36];
+  const primary = SECTOR_ORBITS.map((orbit) => orbit.radius);
 
   // Fine ladder for texture — fainter toward the core.
   const ladder = Array.from({ length: 22 }, (_, i) => i);
@@ -177,8 +188,6 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
     return () => window.removeEventListener("hashchange", onHash);
   }, [index]);
 
-  const ringFor = (i: number) => i % 3;
-
   return (
     <section
       data-zone={id}
@@ -198,27 +207,28 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
       {/* ORBIT STAGE */}
       <div className="relative mx-auto mt-16 w-full max-w-[min(94vw,44rem)] sm:mt-20">
         <div className="relative aspect-square">
-          <div className="ecosystem-stage absolute inset-0">
-            {/* ambient slow drift layer */}
-            <div className="ecosystem-drift pointer-events-none absolute inset-0">
+          <div className="ecosystem-rings pointer-events-none absolute inset-0 z-10">
+            <div className="ecosystem-drift absolute inset-0">
               <OrbitRings />
             </div>
             <OrbitRings />
+          </div>
 
+          <div className="ecosystem-stage absolute inset-0 z-40">
             {SECTORS.map((node, i) => {
               const isActive = i === index;
-              const ring = ringFor(i);
+              const orbit = SECTOR_ORBITS[i];
               const start = (i / SECTORS.length) * 360 - 90;
-              const radius = [44, 40, 36][ring];
-              const duration = [96, 122, 148][ring];
               return (
                 <div
                   key={node.slug}
-                  className={`eco-orbit-lane energy-${ring + 1}`}
+                  className={`eco-orbit-lane energy-${(i % 3) + 1}`}
                   style={{
                     "--orbit-start": `${start}deg`,
-                    "--orbit-radius": `${radius}%`,
-                    "--orbit-duration": `${duration}s`,
+                    "--orbit-radius": `${orbit.radius}%`,
+                    "--orbit-duration": `${orbit.duration}s`,
+                    "--node-pulse-delay": `-${i * 0.72}s`,
+                    "--node-pulse-duration": `${5.8 + (i % 4) * 0.55}s`,
                   } as CSSProperties}
                 >
                   <div className="eco-orbit-slot">
@@ -231,7 +241,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
                         className={`eco-node ${isActive ? "is-active" : ""}`}
                         aria-label={`Open ${node.name}`}
                       >
-                        <div className="eco-node-disc relative flex h-[clamp(3rem,9vw,5.25rem)] w-[clamp(3rem,9vw,5.25rem)] items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.35vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/90">
+                        <div className="eco-node-disc relative flex items-center justify-center rounded-full text-center text-[clamp(0.55rem,1.35vw,0.78rem)] font-light leading-tight tracking-[0.04em] text-ivory/90">
                           <div className="eco-node-glass absolute inset-0 rounded-full" />
                           <div className="eco-node-ring absolute inset-0 rounded-full" />
                           <div className="eco-node-sheen absolute inset-0 rounded-full" />
@@ -247,7 +257,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
           </div>
 
           {/* SOLENA core */}
-          <div className="pointer-events-none absolute left-1/2 top-1/2 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
+          <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
             <div className="eco-core-glass absolute inset-0 rounded-full" />
             <div
               className="absolute inset-0 rounded-full border border-ivory/12"
