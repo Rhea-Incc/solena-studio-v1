@@ -372,6 +372,9 @@
   transform: translate3d(-50%, -50%, 0);
 }
 .eco-orbit-counter {
+  display: block;
+  width: 100%;
+  height: 100%;
   transform-origin: center center;
   will-change: transform;
   animation: eco-orbit-counter var(--orbit-duration, 110s) linear infinite;
@@ -380,7 +383,7 @@
 
 .eco-node {
   pointer-events: auto;
-  display: inline-flex;
+  display: flex;
   position: relative;
   z-index: 70;
   width: 100%;
