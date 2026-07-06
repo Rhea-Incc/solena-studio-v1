@@ -370,14 +370,14 @@
   position: absolute;
   left: calc(50% + var(--orbit-radius, 40%));
   top: 50%;
-  width: clamp(3rem, 9vw, 5.25rem);
-  height: clamp(3rem, 9vw, 5.25rem);
+  width: clamp(2.4rem, 7.2vw, 4.4rem);
+  height: clamp(2.4rem, 7.2vw, 4.4rem);
   transform: translate3d(-50%, -50%, 0);
 }
 .eco-orbit-counter {
   display: block;
-  width: clamp(3rem, 9vw, 5.25rem);
-  height: clamp(3rem, 9vw, 5.25rem);
+  width: 100%;
+  height: 100%;
   transform-origin: center center;
   will-change: transform;
   animation-name: eco-orbit-counter;
@@ -385,6 +385,14 @@
   animation-timing-function: linear;
   animation-iteration-count: infinite;
 }
+
+.eco-node-label {
+  font-size: clamp(0.44rem, 1.02vw, 0.62rem);
+  hyphens: auto;
+  word-break: break-word;
+  max-width: 92%;
+}
+
 
 
 .eco-node {
@@ -547,5 +555,16 @@
   .eco-core-glass { backdrop-filter: blur(6px); }
 }
 
+/* Sector glyph — subtle continuous float, ties into scroll-driven parallax */
+@keyframes sector-glyph-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -1.2%, 0) rotate(0.6deg); }
+}
+.sector-glyph-float {
+  animation: sector-glyph-float 12s ease-in-out infinite;
+  will-change: transform;
+}
 
+/* Tracker rail — spacing when compressed to 80vh */
+.tracker-row { min-height: 12px; }
 

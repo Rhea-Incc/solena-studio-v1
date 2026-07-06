@@ -132,12 +132,15 @@ function EcosystemPage() {
               {[
                 ["Real Estate", "Buildings as gravity wells. Hotels, residences, and quarters that bend the map."],
                 ["Technology", "Tools built as artifacts. Software with the patina of restraint."],
-                ["Hospitality", "Service designed as ritual. Stays that become reference points."],
+                ["Hotels", "Service designed as ritual. Stays that become reference points."],
                 ["Luxury", "Goods engineered to outlive their owner's interest in goods."],
                 ["Media", "Owned channels operating as institutions, not feeds."],
                 ["Ventures", "Capital placed at the intersection of culture and compound."],
                 ["Culture", "The slow construction of taste. The architecture of memory."],
                 ["Capital", "Patient money. Built for the century, not the quarter."],
+                ["Automotive", "Vehicles authored as heirloom-grade objects, not appliances."],
+                ["Airlines", "Air travel restored to ritual — livery, cabin, and lounge as one."],
+                ["Tourism", "Journeys with plot. Itineraries engineered to be remembered."],
               ].map(([k, v]) => (
                 <div key={k} className="border-l border-ivory/10 pl-6">
                   <p className="font-signature text-sm italic text-bronze-glow">
@@ -149,6 +152,7 @@ function EcosystemPage() {
                 </div>
               ))}
             </div>
+
           </div>
         </section>
 
