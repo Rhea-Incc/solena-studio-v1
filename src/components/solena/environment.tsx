@@ -74,6 +74,18 @@ export function EnvironmentCanvas({
           muted
           loop
           playsInline
+          preload="auto"
+          // @ts-expect-error - non-standard iOS attribute for inline muted autoplay
+          webkit-playsinline="true"
+          disablePictureInPicture
+          ref={(el) => {
+            if (!el) return;
+            el.muted = true;
+            const tryPlay = () => el.play().catch(() => void 0);
+            tryPlay();
+            // Retry once metadata is available (Safari / low-end mobile)
+            el.addEventListener("loadeddata", tryPlay, { once: true });
+          }}
           style={{
             mixBlendMode: v.blend ?? "screen",
             opacity: 0,
@@ -88,6 +100,7 @@ export function EnvironmentCanvas({
           ) : null}
         </video>
       ))}
+
 
       <div className="env-veil-deep absolute inset-0" />
       <div className="env-veil-mid absolute inset-0" />
