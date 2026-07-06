@@ -13,4 +13,8 @@
   <url><loc>/sectors/ventures</loc><priority>0.7</priority></url>
   <url><loc>/sectors/culture</loc><priority>0.7</priority></url>
   <url><loc>/sectors/capital</loc><priority>0.7</priority></url>
+  <url><loc>/sectors/automotive</loc><priority>0.7</priority></url>
+  <url><loc>/sectors/airlines</loc><priority>0.7</priority></url>
+  <url><loc>/sectors/tourism</loc><priority>0.7</priority></url>
 </urlset>
+
