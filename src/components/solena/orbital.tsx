@@ -259,7 +259,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
               {SECTORS.map((node, i) => {
                 const isActive = i === index;
                 const orbit = SECTOR_ORBITS[i];
-                const start = (i / SECTORS.length) * 360 - 90;
+                const start = orbit.start;
                 return (
                   <div
                     key={node.slug}
