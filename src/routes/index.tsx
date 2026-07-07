@@ -168,8 +168,14 @@ function SolenaSite() {
           <p className="eyebrow mb-8 opacity-80">
             Civilizational Luxury · Est. Quiet
           </p>
-          <h1 className="hero-wordmark font-display text-[16vw] leading-[0.9] tracking-[-0.04em] sm:text-[12vw] md:text-[10vw] lg:text-[9rem]">
-            SOLENA
+          <h1 className="hero-wordmark relative w-full max-w-[min(92vw,1100px)] leading-none">
+            <span className="sr-only">SOLENA</span>
+            <img
+              src={solenaWordmark.url}
+              alt="SOLENA"
+              className="mx-auto block h-auto w-full select-none"
+              draggable={false}
+            />
           </h1>
           <p className="excavate mt-10 max-w-2xl font-display text-xl font-light italic text-stone sm:text-2xl md:text-3xl">
             <span>We build gravity for culture, capital, and legacy.</span>
