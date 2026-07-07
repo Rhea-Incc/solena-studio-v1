@@ -28,30 +28,45 @@ export const SECTORS: Sector[] = [
 
 export const ECO_NODES = SECTORS.map((s) => s.name);
 
-// Distinct radii + periods for eleven sectors.
-const SECTOR_ORBITS = [
-  { radius: 46, duration: 168 },
-  { radius: 43, duration: 156 },
-  { radius: 40, duration: 144 },
-  { radius: 37, duration: 132 },
-  { radius: 34, duration: 120 },
-  { radius: 31, duration: 108 },
-  { radius: 28, duration: 96 },
-  { radius: 25, duration: 84 },
-  { radius: 22, duration: 76 },
-  { radius: 19, duration: 68 },
-  { radius: 16, duration: 60 },
+/**
+ * Three concentric orbits — mirrors the reference composition where a few
+ * large mini-planets share broad, softly-etched rings. Sectors are
+ * distributed across the rings so multiple bodies occupy the same lane at
+ * different angles, and each ring rotates as a single field.
+ */
+const ORBIT_RINGS = [
+  { radius: 24, duration: 210 }, // inner
+  { radius: 35, duration: 260 }, // middle
+  { radius: 46, duration: 320 }, // outer
 ] as const;
 
+// Deterministic ring assignment for each sector index. Distribution roughly
+// 3 / 4 / 4 keeps every ring visually populated without crowding.
+const RING_ASSIGNMENT = [2, 1, 2, 0, 1, 2, 0, 1, 2, 1, 0] as const;
+
+function orbitFor(i: number) {
+  const ring = RING_ASSIGNMENT[i % RING_ASSIGNMENT.length];
+  const total = RING_ASSIGNMENT.filter((r) => r === ring).length;
+  const positionInRing = RING_ASSIGNMENT.slice(0, i).filter(
+    (r) => r === ring,
+  ).length;
+  const start = (positionInRing / total) * 360 - 90;
+  return { ...ORBIT_RINGS[ring], ring, start };
+}
+
+const SECTOR_ORBITS = SECTORS.map((_, i) => orbitFor(i));
+
 /**
- * Glassmorphic orbit rings. Continuous energy pulses trace each lane at
- * the same angular velocity, evenly phase-offset for a coherent field.
+ * Orbit field — a handful of soft concentric rings etched into the dark
+ * background rather than drawn on top of it. Faint inner ladder lines add
+ * depth without visual noise; energy pulses trace the three primary
+ * lanes at a shared angular velocity, evenly phase-offset.
  */
 export function OrbitRings() {
   const cx = 50;
   const cy = 50;
-  const primary = SECTOR_ORBITS.map((o) => o.radius);
-  const ladder = Array.from({ length: 24 }, (_, i) => i);
+  const primary = ORBIT_RINGS.map((o) => o.radius);
+  const faint = [14, 20, 32, 44, 55];
 
   return (
     <svg
@@ -61,64 +76,58 @@ export function OrbitRings() {
       aria-hidden
     >
       <defs>
-        <radialGradient id="orbWash" cx={`${cx}%`} cy={`${cy}%`} r="65%">
-          <stop offset="0%" stopColor="rgba(212,168,116,0.10)" />
-          <stop offset="55%" stopColor="rgba(255,255,255,0.025)" />
+        <radialGradient id="orbWash" cx={`${cx}%`} cy={`${cy}%`} r="70%">
+          <stop offset="0%" stopColor="rgba(212,168,116,0.09)" />
+          <stop offset="55%" stopColor="rgba(255,255,255,0.02)" />
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
-        <radialGradient id="orbCore" cx={`${cx}%`} cy={`${cy}%`} r="35%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.06)" />
+        <radialGradient id="orbCore" cx={`${cx}%`} cy={`${cy}%`} r="30%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.05)" />
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
         <linearGradient id="orbPulse" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgba(212,168,116,0)" />
-          <stop offset="50%" stopColor="rgba(232,192,140,0.85)" />
+          <stop offset="50%" stopColor="rgba(232,192,140,0.7)" />
           <stop offset="100%" stopColor="rgba(212,168,116,0)" />
         </linearGradient>
       </defs>
 
-      <circle cx={cx} cy={cy} r={49} fill="url(#orbWash)" />
-      <circle cx={cx} cy={cy} r={14} fill="url(#orbCore)" />
+      {/* Ambient wash & core glow — dissolves rings into the surrounding dark */}
+      <circle cx={cx} cy={cy} r={52} fill="url(#orbWash)" />
+      <circle cx={cx} cy={cy} r={16} fill="url(#orbCore)" />
 
-      {ladder.map((i) => {
-        const r = 48 - i * 1.75;
-        if (r <= 5) return null;
-        const t = 1 - i / ladder.length;
-        const heavy = i % 4 === 0;
-        const op = 0.03 + Math.pow(t, 2) * 0.14;
-        return (
-          <circle
-            key={i}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke="rgba(232,224,210,1)"
-            strokeOpacity={heavy ? op + 0.03 : op}
-            strokeWidth={heavy ? 0.16 : 0.07}
-          />
-        );
-      })}
+      {/* Faint inner ladder — depth, not decoration */}
+      {faint.map((r, i) => (
+        <circle
+          key={`f-${r}`}
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="rgba(232,224,210,1)"
+          strokeOpacity={0.04 + i * 0.012}
+          strokeWidth={0.08}
+        />
+      ))}
 
-      {primary.map((r, i) => {
-        const t = 1 - i / (primary.length - 1);
-        return (
-          <circle
-            key={`p-${r}`}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke="rgba(232,224,210,1)"
-            strokeOpacity={0.12 + t * 0.18}
-            strokeWidth={0.22}
-          />
-        );
-      })}
+      {/* Primary orbits — soft, evenly weighted */}
+      {primary.map((r) => (
+        <circle
+          key={`p-${r}`}
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke="rgba(232,224,210,1)"
+          strokeOpacity={0.14}
+          strokeWidth={0.18}
+        />
+      ))}
 
+      {/* Continuous energy pulses on each primary ring */}
       {primary.map((r, i) => {
         const circumference = 2 * Math.PI * r;
-        const dur = 16;
+        const dur = 22;
         const delay = -(dur * i) / primary.length;
         return (
           <circle
@@ -128,10 +137,10 @@ export function OrbitRings() {
             r={r}
             fill="none"
             stroke="url(#orbPulse)"
-            strokeOpacity={0.7}
-            strokeWidth={0.5}
+            strokeOpacity={0.55}
+            strokeWidth={0.45}
             strokeLinecap="round"
-            strokeDasharray={`${circumference * 0.14} ${circumference}`}
+            strokeDasharray={`${circumference * 0.12} ${circumference}`}
             style={{
               transformOrigin: `${cx}% ${cy}%`,
               animation: `eco-pulse-orbit ${dur}s linear infinite`,
@@ -238,7 +247,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
 
         {/* RIGHT — orbit, pushed toward the right of the viewport */}
         <div className="order-1 relative mx-auto w-full max-w-[min(94vw,44rem)] md:order-2 md:mx-0 md:ml-auto md:mr-0 md:flex-1 md:max-w-[min(60vw,50rem)]">
-          <div className="relative aspect-square">
+          <div className="relative aspect-square [container-type:inline-size]">
             <div className="ecosystem-rings pointer-events-none absolute inset-0 z-10">
               <div className="ecosystem-drift absolute inset-0">
                 <OrbitRings />
@@ -250,7 +259,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
               {SECTORS.map((node, i) => {
                 const isActive = i === index;
                 const orbit = SECTOR_ORBITS[i];
-                const start = (i / SECTORS.length) * 360 - 90;
+                const start = orbit.start;
                 return (
                   <div
                     key={node.slug}
@@ -291,7 +300,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
             </div>
 
             {/* SOLENA core */}
-            <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-[22%] w-[22%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
               <div className="eco-core-glass absolute inset-0 rounded-full" />
               <div
                 className="absolute inset-0 rounded-full border border-ivory/12"
