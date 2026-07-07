@@ -9,7 +9,9 @@ import viePortrait from "@/assets/vie-halo-portrait.png.asset.json";
 import gravityPortrait2 from "@/assets/gravity-portrait-2.png.asset.json";
 import heroVideoLandscape from "@/assets/hero-video-landscape.mp4.asset.json";
 import heroVideoPortrait from "@/assets/hero-video-portrait.mp4.asset.json";
-import seedVideo from "@/assets/seed-video.mp4.asset.json";
+import seedVideo from "@/assets/seed-01-2.mp4.asset.json";
+import gravityVideo from "@/assets/g-01-1.mp4.asset.json";
+import solenaWordmark from "@/assets/solena-wordmark-002.png.asset.json";
 
 import {
   EnvironmentCanvas,
@@ -135,7 +137,14 @@ function SolenaSite() {
             src: heroVideoLandscape.url,
             srcPortrait: heroVideoPortrait.url,
             zone: "hero",
-            peakOpacity: 0.22,
+            peakOpacity: 0.24,
+          },
+          {
+            id: "ecosystem-flow",
+            src: gravityVideo.url,
+            zone: "ecosystem",
+            peakOpacity: 0.2,
+            blend: "screen",
           },
           {
             id: "future",
@@ -159,8 +168,14 @@ function SolenaSite() {
           <p className="eyebrow mb-8 opacity-80">
             Civilizational Luxury · Est. Quiet
           </p>
-          <h1 className="hero-wordmark font-display text-[16vw] leading-[0.9] tracking-[-0.04em] sm:text-[12vw] md:text-[10vw] lg:text-[9rem]">
-            SOLENA
+          <h1 className="hero-wordmark relative w-full max-w-[min(92vw,1100px)] leading-none">
+            <span className="sr-only">SOLENA</span>
+            <img
+              src={solenaWordmark.url}
+              alt="SOLENA"
+              className="mx-auto block h-auto w-full select-none"
+              draggable={false}
+            />
           </h1>
           <p className="excavate mt-10 max-w-2xl font-display text-xl font-light italic text-stone sm:text-2xl md:text-3xl">
             <span>We build gravity for culture, capital, and legacy.</span>
