@@ -370,9 +370,18 @@
   position: absolute;
   left: calc(50% + var(--orbit-radius, 40%));
   top: 50%;
-  width: clamp(2.4rem, 7.2vw, 4.4rem);
-  height: clamp(2.4rem, 7.2vw, 4.4rem);
+  /* Highly adaptive radius: nodes scale with container width via cqw when
+     available, falling back to vw. Larger max preserves the reference-image
+     presence on wide viewports. */
+  width: clamp(3.25rem, 13cqw, 7.75rem);
+  height: clamp(3.25rem, 13cqw, 7.75rem);
   transform: translate3d(-50%, -50%, 0);
+}
+@supports not (width: 1cqw) {
+  .eco-orbit-slot {
+    width: clamp(3.25rem, 13vw, 7.75rem);
+    height: clamp(3.25rem, 13vw, 7.75rem);
+  }
 }
 .eco-orbit-counter {
   display: block;
@@ -387,10 +396,11 @@
 }
 
 .eco-node-label {
-  font-size: clamp(0.44rem, 1.02vw, 0.62rem);
+  font-size: clamp(0.6rem, 1.35cqw, 0.88rem);
   hyphens: auto;
   word-break: break-word;
   max-width: 92%;
+  letter-spacing: 0.02em;
 }
 
 
