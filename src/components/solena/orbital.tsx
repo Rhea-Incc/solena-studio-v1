@@ -300,7 +300,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
             </div>
 
             {/* SOLENA core */}
-            <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-[22%] w-[22%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
+            <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 flex h-[26%] w-[26%] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full">
               <div className="eco-core-glass absolute inset-0 rounded-full" />
               <div
                 className="absolute inset-0 rounded-full border border-ivory/12"
