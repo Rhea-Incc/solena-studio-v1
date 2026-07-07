@@ -247,7 +247,7 @@ export function OrbitalEcosystem({ id = "ecosystem" }: { id?: string }) {
 
         {/* RIGHT — orbit, pushed toward the right of the viewport */}
         <div className="order-1 relative mx-auto w-full max-w-[min(94vw,44rem)] md:order-2 md:mx-0 md:ml-auto md:mr-0 md:flex-1 md:max-w-[min(60vw,50rem)]">
-          <div className="relative aspect-square">
+          <div className="relative aspect-square [container-type:inline-size]">
             <div className="ecosystem-rings pointer-events-none absolute inset-0 z-10">
               <div className="ecosystem-drift absolute inset-0">
                 <OrbitRings />
