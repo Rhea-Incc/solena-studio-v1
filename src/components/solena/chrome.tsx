@@ -1,8 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Link } from "@tanstack/react-router";
+import { track } from "@vercel/analytics/react";
 import { Menu, X } from "lucide-react";
 import logoAsset from "@/assets/solena-logo.png.asset.json";
 import wordmarkAsset from "@/assets/solena-wordmark.png.asset.json";
+
+const CANVAS_URL =
+  "https://canvas.lucene.co/?utm_source=solena&utm_medium=navbar&utm_campaign=canvas";
 
 const NAV = [
   { to: "/thesis", label: "Thesis" },
@@ -13,6 +17,12 @@ const NAV = [
 
 export function NavBar() {
   const [open, setOpen] = useState(false);
+
+  const handleCanvasClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    track("canvas_click", { source: "navbar", location: "header" });
+    window.open(CANVAS_URL, "_blank", "noopener,noreferrer");
+  };
 
   // Close on Escape + lock scroll while open
   useEffect(() => {
@@ -49,6 +59,15 @@ export function NavBar() {
               {n.label}
             </Link>
           ))}
+          <a
+            href={CANVAS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleCanvasClick}
+            className="bronze-line"
+          >
+            CANVAS
+          </a>
         </nav>
 
         {/* Mobile hamburger */}
@@ -86,6 +105,23 @@ export function NavBar() {
               {n.label}
             </Link>
           ))}
+          <a
+            href={CANVAS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => {
+              setOpen(false);
+              handleCanvasClick(event);
+            }}
+            className="font-display text-3xl font-light tracking-[0.04em] text-ivory/90 transition-colors hover:text-bronze-glow"
+            style={{
+              opacity: open ? 1 : 0,
+              transform: open ? "translateY(0)" : "translateY(8px)",
+              transition: "opacity 500ms 360ms ease, transform 600ms 360ms cubic-bezier(0.16,1,0.3,1)",
+            }}
+          >
+            CANVAS
+          </a>
           <p className="mt-12 font-signature text-xs italic tracking-[0.3em] text-stone/55">
             Engineered, not advertised.
           </p>

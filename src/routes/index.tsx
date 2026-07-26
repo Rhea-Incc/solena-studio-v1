@@ -11,7 +11,6 @@ import heroVideoLandscape from "@/assets/hero-video-landscape.mp4.asset.json";
 import heroVideoPortrait from "@/assets/hero-video-portrait.mp4.asset.json";
 import seedVideo from "@/assets/seed-01-2.mp4.asset.json";
 import gravityVideo from "@/assets/g-01-1.mp4.asset.json";
-import solenaWordmark from "@/assets/solena-wordmark-002.png.asset.json";
 
 import {
   EnvironmentCanvas,
@@ -165,17 +164,12 @@ function SolenaSite() {
           className="relative flex flex-col items-center justify-center px-6 text-center"
           style={{ minHeight: "120vh" }}
         >
-          <p className="eyebrow mb-8 opacity-80">
-            Civilizational Luxury · Est. Quiet
-          </p>
+          <p className="eyebrow mb-8 opacity-80">CIVILIZATION LUXURY. EST. MMXX</p>
           <h1 className="hero-wordmark relative w-full max-w-[min(92vw,1100px)] leading-none">
             <span className="sr-only">SOLENA</span>
-            <img
-              src={solenaWordmark.url}
-              alt="SOLENA"
-              className="mx-auto block h-auto w-full select-none"
-              draggable={false}
-            />
+            <span className="mx-auto block font-display text-[clamp(3rem,10vw,8rem)] font-light tracking-[0.22em] text-ivory sm:text-[5.25rem] md:text-[7.5rem]">
+              Solena
+            </span>
           </h1>
           <p className="excavate mt-10 max-w-2xl font-display text-xl font-light italic text-stone sm:text-2xl md:text-3xl">
             <span>We build gravity for culture, capital, and legacy.</span>
