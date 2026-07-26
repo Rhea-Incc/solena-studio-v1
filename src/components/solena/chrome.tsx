@@ -2,7 +2,6 @@ import { useEffect, useState, type MouseEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { track } from "@vercel/analytics/react";
 import { Menu, X } from "lucide-react";
-import logoAsset from "@/assets/solena-logo.png.asset.json";
 import wordmarkAsset from "@/assets/solena-wordmark.png.asset.json";
 
 const CANVAS_URL =
@@ -41,7 +40,23 @@ export function NavBar() {
     <header className="fixed left-0 right-0 top-0 z-50 px-6 py-6 md:px-10">
       <div className="mx-auto flex max-w-7xl items-center justify-between">
         <Link to="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <img src={logoAsset.url} alt="Solena" className="h-8 w-8" />
+          <svg
+            viewBox="0 0 30 30"
+            aria-hidden="true"
+            className="h-5 w-5 text-stone"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle cx="5" cy="5" r="2.5" fill="currentColor" />
+            <circle cx="15" cy="5" r="2.5" fill="currentColor" />
+            <circle cx="25" cy="5" r="2.5" fill="var(--bronze)" />
+            <circle cx="5" cy="15" r="2.5" fill="currentColor" />
+            <circle cx="15" cy="15" r="2.5" fill="currentColor" />
+            <circle cx="25" cy="15" r="2.5" fill="currentColor" />
+            <circle cx="5" cy="25" r="2.5" fill="currentColor" />
+            <circle cx="15" cy="25" r="2.5" fill="currentColor" />
+            <circle cx="25" cy="25" r="2.5" fill="currentColor" />
+          </svg>
           <span className="hidden font-display text-sm tracking-[0.45em] text-ivory sm:inline">
             SOLENA
           </span>
