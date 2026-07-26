@@ -55,29 +55,81 @@ export type Database = {
           country: string | null
           created_at: string
           device: string | null
+          browser: string | null
+          os: string | null
           id: string
           path: string
           referrer: string | null
           session_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
           user_agent: string | null
         }
         Insert: {
           country?: string | null
           created_at?: string
           device?: string | null
+          browser?: string | null
+          os?: string | null
           id?: string
           path: string
           referrer?: string | null
           session_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           user_agent?: string | null
         }
         Update: {
           country?: string | null
           created_at?: string
           device?: string | null
+          browser?: string | null
+          os?: string | null
           id?: string
           path?: string
           referrer?: string | null
+          session_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
+
+      custom_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          path: string | null
+          properties: Json | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          path?: string | null
+          properties?: Json | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          path?: string | null
+          properties?: Json | null
           session_id?: string | null
           user_agent?: string | null
         }

@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { track } from "@vercel/analytics/react";
 import { Menu, X } from "lucide-react";
 import wordmarkAsset from "@/assets/solena-wordmark.png.asset.json";
+import { logCustomEvent } from "@/lib/analytics";
 
 const CANVAS_URL =
   "https://canvas.lucene.co/?utm_source=solena&utm_medium=navbar&utm_campaign=canvas";
@@ -17,9 +18,10 @@ const NAV = [
 export function NavBar() {
   const [open, setOpen] = useState(false);
 
-  const handleCanvasClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  const handleCanvasClick = async (event: MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     track("canvas_click", { source: "navbar", location: "header" });
+    void logCustomEvent("canvas_click", { source: "navbar", location: "header" });
     window.open(CANVAS_URL, "_blank", "noopener,noreferrer");
   };
 
